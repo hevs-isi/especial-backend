@@ -46,49 +46,54 @@
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.237807929" name="Cross ARM GNU Assembler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor.1667377749" name="Use preprocessor" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.usepreprocessor" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths.2129721265" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;../include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/arm&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/CMSIS&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/cortexm&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/diag&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/stm32f1-stdperiph&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/freertos&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../include/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/arm/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/CMSIS/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/cortexm/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/diag/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/stm32f1-stdperiph/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/freertos/&quot;"/>
 									<listOptionValue builtIn="false" value="../system/include/freertos/portable/"/>
 									<listOptionValue builtIn="false" value="../system/include/freertos/portable/GCC/ARM_CM3/"/>
 								</option>
-								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs.860951692" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs"/>
+								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs.860951692" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.assembler.defs" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="STM32F10X_MD"/>
+									<listOptionValue builtIn="false" value="HSE_VALUE=80000000"/>
+									<listOptionValue builtIn="false" value="USE_STDPERIPH_DRIVER"/>
+								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input.2104957037" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.assembler.input"/>
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1984367184" name="Cross ARM C Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths.1098247676" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;../include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/arm&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/CMSIS&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/cortexm&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/diag&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/stm32f1-stdperiph&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/freertos&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../include/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/arm/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/CMSIS/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/cortexm/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/diag/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/stm32f1-stdperiph/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/freertos/&quot;"/>
 									<listOptionValue builtIn="false" value="../system/include/freertos/portable/"/>
 									<listOptionValue builtIn="false" value="../system/include/freertos/portable/GCC/ARM_CM3/"/>
 								</option>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs.522299051" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.c.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
 									<listOptionValue builtIn="false" value="STM32F10X_MD"/>
+									<listOptionValue builtIn="false" value="HSE_VALUE=80000000"/>
 									<listOptionValue builtIn="false" value="USE_STDPERIPH_DRIVER"/>
 								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1227917892" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input"/>
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1920376674" name="Cross ARM C++ Compiler" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler">
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths.836256302" name="Include paths (-I)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.include.paths" useByScannerDiscovery="false" valueType="includePath">
-									<listOptionValue builtIn="false" value="&quot;../include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/arm&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/CMSIS&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/cortexm&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/diag&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/stm32f1-stdperiph&quot;"/>
-									<listOptionValue builtIn="false" value="&quot;../system/include/freertos&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../include/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/arm/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/CMSIS/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/cortexm/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/diag/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/stm32f1-stdperiph/&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;../system/include/freertos/&quot;"/>
 									<listOptionValue builtIn="false" value="../system/include/freertos/portable/"/>
 									<listOptionValue builtIn="false" value="../system/include/freertos/portable/GCC/ARM_CM3/"/>
 								</option>
@@ -96,7 +101,11 @@
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nortti.2044520908" name="Do not use RTTI (-fno-rtti)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nortti" useByScannerDiscovery="true" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nousecxaatexit.1474687141" name="Do not use _cxa_atexit() (-fno-use-cxa-atexit)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nousecxaatexit" useByScannerDiscovery="true" value="true" valueType="boolean"/>
 								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nothreadsafestatics.1265768363" name="Do not use thread-safe statics (-fno-threadsafe-statics)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.nothreadsafestatics" useByScannerDiscovery="true" value="true" valueType="boolean"/>
-								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs.285522415" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs" useByScannerDiscovery="false"/>
+								<option id="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs.285522415" name="Defined symbols (-D)" superClass="ilg.gnuarmeclipse.managedbuild.cross.option.cpp.compiler.defs" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="STM32F10X_MD"/>
+									<listOptionValue builtIn="false" value="HSE_VALUE=80000000"/>
+									<listOptionValue builtIn="false" value="USE_STDPERIPH_DRIVER"/>
+								</option>
 								<inputType id="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.444943403" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input"/>
 							</tool>
 							<tool id="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker.1183147079" name="Cross ARM C Linker" superClass="ilg.gnuarmeclipse.managedbuild.cross.tool.c.linker">
@@ -154,6 +163,7 @@
 				</configuration>
 			</storageModule>
 			<storageModule moduleId="org.eclipse.cdt.core.externalSettings"/>
+			<storageModule moduleId="ilg.gnuarmeclipse.managedbuild.packs"/>
 		</cconfiguration>
 	</storageModule>
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">

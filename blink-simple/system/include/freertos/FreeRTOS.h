@@ -82,6 +82,7 @@
 /* Definitions specific to the port being used. */
 #include "portable.h"
 
+#include "portmacro.h"
 
 /* Defines the prototype to which the application task hook function must
 conform. */
