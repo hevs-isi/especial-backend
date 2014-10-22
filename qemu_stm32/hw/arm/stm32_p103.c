@@ -20,6 +20,11 @@
  * with this program; if not, see <http://www.gnu.org/licenses/>.
  */
 
+// Time
+#include <time.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "hw/arm/stm32.h"
 #include "hw/sysbus.h"
 #include "hw/arm/arm.h"
@@ -37,24 +42,33 @@ typedef struct {
 } Stm32P103;
 
 
-
+static char* get_current_time(void) {
+	char* buff = (char*)malloc(20 * sizeof(char));
+    time_t now = time(0);
+    strftime (buff, 20, "[%H:%M:%S] ", localtime(&now));
+	return buff;
+}
 
 static void led_irq_handler(void *opaque, int n, int level)
 {
     /* There should only be one IRQ for the LED */
     assert(n == 0);
 
+    char* time = get_current_time();
+
     /* Assume that the IRQ is only triggered if the LED has changed state.
      * If this is not correct, we may get multiple LED Offs or Ons in a row.
      */
     switch (level) {
         case 0:
-            printf("LED Off\n");
+            printf("%s GPIO_Pin_12 off\n", time);
             break;
         case 1:
-            printf("LED On\n");
+            printf("%s GPIO_Pin_12 on\n", time);
             break;
     }
+
+    free(time);
 }
 
 static void stm32_p103_key_event(void *opaque, int keycode)
