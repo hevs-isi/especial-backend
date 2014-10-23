@@ -1,1 +1,3 @@
-target-qemu/
+# Ignore binaries
+/target-qemu/
+/target-board/
