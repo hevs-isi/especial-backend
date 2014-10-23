@@ -1,8 +1,11 @@
-
 #include "helper.h"
-
-#include "stm32f10x_conf.h"
+#include "stm32f10x.h"
 #include "stm32f10x_gpio.h"
+#include "stm32f10x_rcc.h"
+#include "stm32f10x_usart.h"
+#include "stm32f10x_exti.h"
+#include "misc.h"
+
 #include "../system/src/stm32f1-stdperiph/stm32f10x_usart.c"
 
 #define LED_PERIPH	RCC_APB2Periph_GPIOC
@@ -48,7 +51,7 @@ void init_rs232(void) {
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
 	/* Configure the USART2 */
-	USART_InitStructure.USART_BaudRate = 9600;
+	USART_InitStructure.USART_BaudRate = 115200;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -93,8 +96,6 @@ void send_byte(uint8_t b) {
 	while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET)
 		;
 
-	/* Toggle the LED just to show that progress is being made. */
-	//GPIOC->ODR ^= 0x00001000;
 	/* Send the byte */
 	USART_SendData(USART2, b);
 }
@@ -102,7 +103,9 @@ void send_byte(uint8_t b) {
 void send_string(const char* s) {
 	uint8_t i = 0;
 	while (s[i] != 0x00) {
-		send_byte((uint8_t)s[i]);
+		send_byte((uint8_t) s[i]);
 		i++;
 	}
+
+	led_toggle(); // Toggle the LED
 }
