@@ -105,3 +105,8 @@ cscope.*
 tags
 TAGS
 *~
+
+tests/qemu-iotests/common.env
+roms/seabios/config.mak
+roms/vgabios/config.mak
+tests/test-qapi-event.h
