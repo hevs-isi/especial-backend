@@ -9,4 +9,8 @@ obj-$(CONFIG_DIGIC) += digic.o
 obj-y += omap1.o omap2.o strongarm.o
 obj-$(CONFIG_ALLWINNER_A10) += allwinner-a10.o cubieboard.o
 
+# STM32 machine
 obj-y += stm32.o stm32_rcc.o stm32_clktree.o stm32_p103.o stm32_maple.o
+
+# STM32 emulation
+obj-y += stm32_p103_emul.o

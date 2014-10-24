@@ -28,9 +28,10 @@
 #include "hw/sysbus.h"
 #include "qemu/log.h"
 
+#include "stm32_p103_emul.h"   // Emulation
+
 void stm32_hw_warn(const char *fmt, ...)
     __attribute__ ((__format__ (__printf__, 1, 2)));
-
 
 
 /* PERIPHERALS - COMMON */

@@ -68,6 +68,10 @@ static void led_irq_handler(void *opaque, int n, int level)
             break;
     }
 
+    // The value of the GPIO C pin 12 has changed
+    post_event_digital_out(12, level);
+    //stm32p103_emul_event_post(DIGITAL_OUT, 12, level);
+
     free(time);
 }
 
@@ -141,6 +145,9 @@ static void stm32_p103_init(MachineState *machine)
             (Stm32Uart *)uart2,
             serial_hds[0],
             STM32_USART2_NO_REMAP);
+
+
+    stm32p103_emul_init();	// QEMU TCP gateway init
  }
 
 static QEMUMachine stm32_p103_machine = {
