@@ -33,6 +33,16 @@
 #include "sysemu/sysemu.h"
 #include "hw/boards.h"
 
+/* Debug print:  #define or #undef */
+#undef STM32_P103_DEBUG
+
+#ifdef STM32_P103_DEBUG
+#define DBG(fmt, ...) \
+		printf("stm32p103: " fmt, ## __VA_ARGS__);
+#else
+#define DBG(fmt, ...) \
+		do { } while (0)
+#endif
 
 typedef struct {
     Stm32 *stm32;
@@ -61,10 +71,10 @@ static void led_irq_handler(void *opaque, int n, int level)
      */
     switch (level) {
         case 0:
-            printf("%s GPIO_Pin_12 off\n", time);
+            DBG("%s GPIO_Pin_12 off\n", time);
             break;
         case 1:
-            printf("%s GPIO_Pin_12 on\n", time);
+        	DBG("%s GPIO_Pin_12 on\n", time);
             break;
     }
 

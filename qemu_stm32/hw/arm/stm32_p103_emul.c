@@ -20,16 +20,16 @@
 
 #ifdef STM32_P103_EMUL_DEBUG
 #define DBG(fmt, ...) \
-			printf("stm32p103_emul: " fmt, ## __VA_ARGS__);
+		printf("stm32p103_emul: " fmt, ## __VA_ARGS__);
 
 #define PRINT_CMD(x) \
-			printf(CMD_STR_PATTERN, x->data.periph, x->data.action, x->data.data)
+		printf(CMD_STR_PATTERN, x->data.periph, x->data.action, x->data.data)
 #else
 #define DBG(fmt, ...) \
-			do { } while (0)
+		do { } while (0)
 
 #define PRINT_CMD(x) \
-			do { } while (0)
+		do { } while (0)
 #endif
 
 #define ERR(fmt, ...) \
@@ -118,11 +118,11 @@ static void *stm32p103_emul_cmd_thread(void *arg) {
 
 	if (state->cmd_sock == -1) {
 		ERR("failed to connect to %s\n", host_str);
-		ERR("%s terminated\n", __FUNCTION__);
+		ERR("%s terminated\n\n", __FUNCTION__);
 		return NULL;
 	}
 
-	DBG("connected to %s", host_str);
+	DBG("connected to %s\n\n", host_str);
 
 	while (1) {
 		/* Wait on command to process */
