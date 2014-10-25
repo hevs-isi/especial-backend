@@ -1,0 +1,3 @@
+# Ignore binaries
+/target-qemu/
+/target-board/
