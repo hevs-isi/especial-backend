@@ -16,14 +16,14 @@
 #include "hw/arm/stm32_p103_emul.h"
 
 /* Debug print:  #define or #undef */
-#undef STM32_P103_EMUL_DEBUG
+#define STM32_P103_EMUL_DEBUG
 
 #ifdef STM32_P103_EMUL_DEBUG
 #define DBG(fmt, ...) \
 		printf("stm32p103_emul: " fmt, ## __VA_ARGS__);
 
 #define PRINT_CMD(x) \
-		printf(CMD_STR_PATTERN, x->data.periph, x->data.action, x->data.data)
+		printf(CMD_STR_PATTERN, x->data.periph, x->data.id, x->data.data)
 #else
 #define DBG(fmt, ...) \
 		do { } while (0)

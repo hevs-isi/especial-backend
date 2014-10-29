@@ -59,7 +59,7 @@ void init_rs232(void) {
 	USART_HardwareFlowControl_None;
 	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
 	USART_Init(USART2, &USART_InitStructure);
-	USART_Cmd(USART2, ENABLE);
+	enable_rs232();
 }
 
 void enable_rs232_interrupts(void) {

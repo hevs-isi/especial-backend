@@ -346,6 +346,9 @@
 	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets"/>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1164997812.1903547157.1915281559;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1164997812.1903547157.1915281559.;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.1403766749;ilg.gnuarmeclipse.managedbuild.cross.tool.cpp.compiler.input.1310591589">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1164997812;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1164997812.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1984367184;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1227917892">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
@@ -353,6 +356,9 @@
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1578949260;ilg.gnuarmeclipse.managedbuild.cross.config.elf.release.1578949260.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.403374429;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.281228897">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1164997812.1903547157.1915281559;ilg.gnuarmeclipse.managedbuild.cross.config.elf.debug.1164997812.1903547157.1915281559.;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.1406668369;ilg.gnuarmeclipse.managedbuild.cross.tool.c.compiler.input.1886913978">
 			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 		</scannerConfigBuildInfo>
 	</storageModule>

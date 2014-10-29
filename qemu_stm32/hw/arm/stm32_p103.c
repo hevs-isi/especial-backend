@@ -34,7 +34,7 @@
 #include "hw/boards.h"
 
 /* Debug print:  #define or #undef */
-#undef STM32_P103_DEBUG
+#define STM32_P103_DEBUG
 
 #ifdef STM32_P103_DEBUG
 #define DBG(fmt, ...) \
