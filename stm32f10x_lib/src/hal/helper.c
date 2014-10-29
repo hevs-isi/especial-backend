@@ -106,6 +106,4 @@ void send_string(const char* s) {
 		send_byte((uint8_t) s[i]);
 		i++;
 	}
-
-	led_toggle(); // Toggle the LED
 }
