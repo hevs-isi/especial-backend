@@ -3,21 +3,19 @@
  */
 #pragma once
 
+#include <digitalio.h>
 #include <stdint.h>
 
-class DigitalOutput {
+
+class DigitalOutput: public DigitalIO {
 public:
 
-	DigitalOutput(uint8_t pin);
+	DigitalOutput(uint8_t port, uint8_t pin);
 	virtual ~DigitalOutput();
 
-	typedef enum e_State {
-		Off = -1, On = 1, Invalid = 0
-	} State;
+	virtual bool initialize();
 
-	bool initialize();
 	State state() const;
-
 	void setState(State state);
 
 	inline void set(bool state) {
@@ -39,8 +37,4 @@ public:
 	void toggle() {
 		setState(static_cast<State>(-state()));
 	}
-
-private:
-	uint8_t _pin;
-	State _state;
 };

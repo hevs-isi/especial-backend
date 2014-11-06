@@ -6,12 +6,6 @@
 #include "stm32f10x_exti.h"
 #include "misc.h"
 
-// #include "../system/src/stm32f1-stdperiph/stm32f10x_usart.c"
-
-#define LED_PERIPH	RCC_APB2Periph_GPIOC
-#define LED_PORT	GPIOC
-#define LED_PIN		GPIO_Pin_12
-
 void init_led(void) {
 	GPIO_InitTypeDef GPIO_InitStructure;
 
@@ -29,6 +23,11 @@ void init_led(void) {
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
+}
+
+void enable_rs232(void) {
+	/* Enable the RS232 port. */
+	USART_Cmd(USART2, ENABLE);
 }
 
 void init_rs232(void) {
@@ -51,7 +50,7 @@ void init_rs232(void) {
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
 	/* Configure the USART2 */
-	USART_InitStructure.USART_BaudRate = 115200;
+	USART_InitStructure.USART_BaudRate = 9600;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
@@ -75,11 +74,6 @@ void enable_rs232_interrupts(void) {
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&NVIC_InitStructure);
-}
-
-void enable_rs232(void) {
-	/* Enable the RS232 port. */
-	USART_Cmd(USART2, ENABLE);
 }
 
 void led_toggle(void) {
@@ -106,4 +100,10 @@ void send_string(const char* s) {
 		send_byte((uint8_t) s[i]);
 		i++;
 	}
+}
+
+void busy_loop(uint32_t delay) {
+	// FIXME: not the same behavior on QEMU and on the real target
+	while (delay)
+		delay--;
 }
