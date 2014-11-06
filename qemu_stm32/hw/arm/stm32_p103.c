@@ -47,10 +47,31 @@
 typedef struct {
     Stm32 *stm32;
 
+    /* Joystick center button pressed or not */
     bool last_button_pressed;
     qemu_irq button_irq;
+
 } Stm32P103;
 
+static void btn_write(void *opaque, bool pressed)
+{
+	Stm32P103 *s = (Stm32P103 *)opaque;
+
+	s->last_button_pressed = pressed;
+
+	if(!s->last_button_pressed)
+		qemu_irq_raise(s->button_irq);
+	else
+		qemu_irq_lower(s->button_irq);
+}
+
+inline static btn_pressed(void *opaque) {
+	btn_write(opaque, true);
+}
+
+inline static btn_released(void *opaque) {
+	btn_write(opaque, false);
+}
 
 static char* get_current_time(void) {
 	char* buff = (char*)malloc(20 * sizeof(char));
@@ -61,8 +82,10 @@ static char* get_current_time(void) {
 
 static void led_irq_handler(void *opaque, int n, int level)
 {
+	Stm32P103 *s = (Stm32P103 *)opaque;
+
     /* There should only be one IRQ for the LED */
-    assert(n == 0);
+    //assert(n == 0);
 
     char* time = get_current_time();
 
@@ -78,11 +101,22 @@ static void led_irq_handler(void *opaque, int n, int level)
             break;
     }
 
+    // FIXME: test only
+    // btn_write(s, true); // Button is ON (pressed)
+
     // The value of the GPIO C pin 12 has changed
     post_event_digital_out(12, level);
     //stm32p103_emul_event_post(DIGITAL_OUT, 12, level);
 
     free(time);
+}
+
+static void btn_irq_handler(void *opaque, int n, int level)
+{
+	Stm32P103 *s = (Stm32P103 *)opaque;
+
+	DBG("btn_irq_handler: n=%d, level=%d\n", n, level);
+	DBG("last_button_pressed=%d\n", s->last_button_pressed);
 }
 
 static void stm32_p103_key_event(void *opaque, int keycode)
@@ -116,7 +150,6 @@ static void stm32_p103_key_event(void *opaque, int keycode)
         }
     }
     return;
-
 }
 
 
@@ -143,12 +176,15 @@ static void stm32_p103_init(MachineState *machine)
     assert(uart2);
 
     /* Connect LED to GPIO C pin 12 */
-    led_irq = qemu_allocate_irqs(led_irq_handler, NULL, 1);
+    led_irq = qemu_allocate_irqs(led_irq_handler, s, 1);
     qdev_connect_gpio_out(gpio_c, 12, led_irq[0]);
 
-    /* Connect button to GPIO A pin 0 */
-    s->button_irq = qdev_get_gpio_in(gpio_a, 0);
-    qemu_add_kbd_event_handler(stm32_p103_key_event, s);
+    /* Connect button to GPIO C pin 6 (Joystick button center) */
+    s->button_irq = qemu_allocate_irq(btn_irq_handler, s, 1);
+    qdev_connect_gpio_out(gpio_c, 6, s->button_irq);
+
+    //s->button_irq = qdev_get_gpio_in(gpio_a, 0);
+    //qemu_add_kbd_event_handler(stm32_p103_key_event, s);
 
     /* Connect RS232 to UART */
     stm32_uart_connect(

@@ -35,9 +35,13 @@
 #define ERR(fmt, ...) \
 		fprintf(stderr, "stm32p103_emul: " fmt, ## __VA_ARGS__)
 
-static const char CMD_STR_PATTERN[] = "{\"periph\": %d, \"id\": %d, \"data\": %d}\n";
 static const char HOST_PATTERN[] = "localhost:%d";
+
 static const uint32_t TCP_CMD_PORT = 14001;
+static const char CMD_STR_PATTERN[] = "{\"periph\": %d, \"id\": %d, \"data\": %d}\n";
+
+static const uint32_t TCP_EVT_PORT = 14002;
+
 
 // Data structure for event in the queue
 typedef struct P103Cmd {
@@ -50,14 +54,21 @@ typedef struct P103Cmd {
 } P103Cmd;
 
 typedef struct P103EmulState {
-	/* Send commands outside QEMU */
+
+	/* Send commands outside QEMU (to the monitor / GUI) */
 	QSIMPLEQ_HEAD(cmd_list, P103Cmd) cmd_list; // queue of commands
 	uint32_t cmd_nbr;
 	uint32_t cmd_thread_terminate;
 	QemuThread cmd_thread_id;
 	QemuMutex cmd_mutex; // condition variable and associated mutex
 	QemuCond cmd_cond;
-	int cmd_sock;	// TCP socket
+	int cmd_sock; // TCP socket
+
+	/* Receive events inside QEMU (from the monitor / GUI) */
+    int evt_sock; // TCP socket
+    QSIMPLEQ_HEAD(event_list, P103Cmd) evt_list; // queue of events
+    QemuThread evt_thread_id;
+
 } P103EmulState;
 
 // State wit attributes
@@ -170,6 +181,65 @@ static void *stm32p103_emul_cmd_thread(void *arg) {
 	return NULL;
 }
 
+/**
+ * Read events from a Monitor to write QEMU inputs.
+ */
+static void *stm32p103_emul_evt_handle(void *arg) {
+	P103EmulState *state = arg; // program state
+
+	DBG("%s started\n", __FUNCTION__);
+
+	char host_str[255];
+	snprintf(host_str, sizeof(host_str), HOST_PATTERN, TCP_EVT_PORT);
+	state->evt_sock = inet_connect(host_str, NULL);
+
+	if (state->evt_sock == -1) {
+		ERR("failed to connect to %s\n", host_str);
+		ERR("%s terminated\n\n", __FUNCTION__);
+		return NULL;
+	}
+
+	DBG("connected to %s\n\n", host_str);
+
+	uint32_t data;
+	while(1) {
+
+		// Read from server
+		DBG("Wait to read...\n");
+		size_t n = read(state->evt_sock, &data, 4);
+		data = ntohl(data);
+		if(n != 4) {
+			DBG("Read %d. End !\n", (int)n);
+			DBG("Read: %d\n\n", data);
+			break; // Connection closed or error
+		}
+		DBG("Read OK: %d\n", data);
+
+		/*read(sp6->evt_sock, &per_id, 4);
+		per_id = ntohl(per_id);
+		read(sp6->evt_sock, &action, 4);
+		action = ntohl(action);
+		read(sp6->evt_sock, &len, 4);
+		len = ntohl(len);
+		DBG("%s p: 0x%08X, a: 0x%08X, l: 0x%08X\n", __FUNCTION__, per_id, action, len);
+
+		buf = malloc(len);
+		read(sp6->evt_sock, buf, len);
+
+		switch (per_id) {
+			case SP6_BTN:
+				reptar_sp6_btns_event_process(action, buf, len);
+				free(buf);
+				break;
+			default:
+				DBG("%s invalid peripheral id\n", __FUNCTION__);
+		}*/
+	}
+
+	DBG("%s terminated\n", __FUNCTION__);
+	return NULL;
+}
+
 int stm32p103_emul_init(void) {
 	DBG("%s\n", __FUNCTION__);
 
@@ -181,8 +251,11 @@ int stm32p103_emul_init(void) {
 	qemu_cond_init(&p103_state.cmd_cond);
 
 	// Thread to send commands outside QEMU
-	qemu_thread_create(&p103_state.cmd_thread_id, "cmd",
-			stm32p103_emul_cmd_thread, &p103_state, QEMU_THREAD_JOINABLE);
+	qemu_thread_create(&p103_state.cmd_thread_id, "cmd", stm32p103_emul_cmd_thread, &p103_state, QEMU_THREAD_JOINABLE);
+
+	// Thread to receive events from the Monitor / GUI
+	qemu_thread_create(&p103_state.evt_thread_id, "evt", stm32p103_emul_evt_handle, &p103_state, QEMU_THREAD_JOINABLE);
+
 	return 0;
 }
 
@@ -192,5 +265,8 @@ int stm32p103_emul_exit(void) {
 	p103_state.cmd_thread_terminate = 1;
 	qemu_cond_signal(&p103_state.cmd_cond);
 	qemu_thread_join(&p103_state.cmd_thread_id);
+
+	qemu_thread_join(&p103_state.evt_thread_id);
+
 	return 0;
 }
