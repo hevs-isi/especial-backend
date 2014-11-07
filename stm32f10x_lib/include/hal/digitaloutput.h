@@ -13,6 +13,9 @@ public:
 	DigitalOutput(uint8_t port, uint8_t pin);
 	virtual ~DigitalOutput();
 
+	/**
+	 * @brief Configure the pin as output and set it to `OFF`.
+	 */
 	virtual bool initialize();
 
 	State state() const;

@@ -10,9 +10,6 @@ DigitalOutput::DigitalOutput(uint8_t port, uint8_t pin) :
 DigitalOutput::~DigitalOutput() {
 }
 
-/**
- * Configure the pin as output.
- */
 bool DigitalOutput::initialize() {
 	assert(_pin.port >= 'A' && _pin.port <= 'G');
 
@@ -25,6 +22,8 @@ bool DigitalOutput::initialize() {
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
+
+	set(false);	// Default is OFF
 	return true;
 }
 
