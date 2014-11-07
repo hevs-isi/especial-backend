@@ -1,8 +1,7 @@
 /*
- * digitalio.h
+ * Gpio.h
  */
-#ifndef INCLUDE_HAL_DIGITALIO_H_
-#define INCLUDE_HAL_DIGITALIO_H_
+#pragma once
 
 #include "stm32f10x.h"
 #include "stm32f10x_gpio.h"
@@ -18,7 +17,7 @@ using namespace std;
 /**
  * @brief Control a digital input or output.
  */
-class DigitalIO {
+class Gpio {
 public:
 
 	/**
@@ -43,8 +42,8 @@ public:
 public:
 
 	// TODO: pass the Pin struct as argument
-	DigitalIO(uint8_t port, uint8_t pin);
-	virtual ~DigitalIO();
+	Gpio(uint8_t port, uint8_t pin);
+	virtual ~Gpio();
 
 	/**
 	 * @brief Initialization of the GPIO.
@@ -61,8 +60,7 @@ protected:
 	GPIO_TypeDef* gpio_port_base = _ports_base.at(_pin.port);
 
 private:
+	//FIXME: optimize with an array ?
 	static const map<uint8_t, uint32_t> _ports_rcc;
 	static const map<uint8_t, GPIO_TypeDef*> _ports_base;
 };
-
-#endif /* INCLUDE_HAL_DIGITALIO_H_ */

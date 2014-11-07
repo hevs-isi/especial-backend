@@ -3,11 +3,11 @@
  */
 #pragma once
 
-#include <digitalio.h>
+#include "gpio.h"
+
 #include <stdint.h>
 
-
-class DigitalOutput: public DigitalIO {
+class DigitalOutput: public Gpio {
 public:
 
 	DigitalOutput(uint8_t port, uint8_t pin);
@@ -27,6 +27,11 @@ public:
 
 	inline const DigitalOutput & operator=(State state) {
 		setState(state);
+		return *this;
+	}
+
+	inline const DigitalOutput & operator=(bool value) {
+		set(value);
 		return *this;
 	}
 

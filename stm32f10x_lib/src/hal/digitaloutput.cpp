@@ -4,11 +4,10 @@
 #include "digitaloutput.h"
 
 DigitalOutput::DigitalOutput(uint8_t port, uint8_t pin) :
-		DigitalIO(port, pin) {
+		Gpio(port, pin) {
 }
 
 DigitalOutput::~DigitalOutput() {
-	// Not used
 }
 
 /**
@@ -38,6 +37,6 @@ void DigitalOutput::setState(State state) {
 		GPIO_SetBits(gpio_port_base, _pin.pin); // set
 }
 
-DigitalIO::State DigitalOutput::state() const {
+Gpio::State DigitalOutput::state() const {
 	return _state;
 }

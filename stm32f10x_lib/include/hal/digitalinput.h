@@ -3,9 +3,10 @@
  */
 #pragma once
 
-#include <digitalio.h>
+#include "gpio.h"
+#include "api/interrupt.h"
 
-class DigitalInput: public DigitalIO {
+class DigitalInput: public Gpio, public Interrupt {
 public:
 
 	DigitalInput(uint8_t port, uint8_t pin);
@@ -31,6 +32,15 @@ public:
 		return state();
 	}
 
+
+
 	// Read the input GPIO value and update the cached state
+	inline operator bool() {
+		return read();
+	}
+
 	bool read();
+
+	// Interrupt
+	virtual void irq();
 };

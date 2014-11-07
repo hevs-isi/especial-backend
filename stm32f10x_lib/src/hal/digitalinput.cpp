@@ -2,13 +2,13 @@
  * DigitalInput.cpp
  */
 #include "digitalinput.h"
+#include "controller/intcontroller.h"
 
 DigitalInput::DigitalInput(uint8_t port, uint8_t pin) :
-		DigitalIO(port, pin) {
+		Gpio(port, pin) {
 }
 
 DigitalInput::~DigitalInput() {
-	// Not used
 }
 
 /**
@@ -25,6 +25,12 @@ bool DigitalInput::initialize() {
 	GPIO_InitStructure.GPIO_Pin = _pin.pin;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 
+
+
+	// TODO: move to IntCtrl ?
+	// FIXME: generic ?
+
+
 	GPIO_EXTILineConfig(GPIO_PortSourceGPIOC, GPIO_PinSource6);
 
 	// Configure external interrupt for PC6
@@ -39,7 +45,8 @@ bool DigitalInput::initialize() {
 	// Enable EXTI interrupt
 	// EXTI9_5_IRQn   = External Line[9:5] Interrupts
 	// EXTI15_10_IRQn = External Line[15:10] Interrupts
-	const uint8_t channel = (_pin.pin < (1 << 10)) ? EXTI9_5_IRQn : EXTI15_10_IRQn;
+	const uint8_t channel =
+			(_pin.pin < (1 << 10)) ? EXTI9_5_IRQn : EXTI15_10_IRQn;
 
 	NVIC_InitTypeDef nvicInitStructure;
 	nvicInitStructure.NVIC_IRQChannel = channel;
@@ -47,6 +54,10 @@ bool DigitalInput::initialize() {
 	nvicInitStructure.NVIC_IRQChannelSubPriority = 0x00;
 	nvicInitStructure.NVIC_IRQChannelCmd = ENABLE;
 	NVIC_Init(&nvicInitStructure);
+
+	// Register as interrupt
+	IntCtrl::instance()->registerInt(this, _pin.pin);
+
 	return true;
 }
 
@@ -57,4 +68,8 @@ bool DigitalInput::read() {
 		_state = Off;
 
 	return (_state == State(On)); // Boolean value
+}
+
+void DigitalInput::irq() {
+	read();	// Read the button value and save the new state
 }
