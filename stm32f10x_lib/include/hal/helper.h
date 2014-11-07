@@ -31,7 +31,7 @@ void enable_rs232(void);
 
 void send_byte(uint8_t b);
 
-void send_string(const char* s);
+void println(const char* s);
 
 void busy_loop(uint32_t delay);
 

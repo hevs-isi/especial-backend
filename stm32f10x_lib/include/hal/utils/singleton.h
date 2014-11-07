@@ -13,6 +13,11 @@
  */
 template<class T> class Singleton {
 public:
+
+	/**
+	 * @brief Return the single instance of the class.
+	 * The instance is created statically (no `new`) even if nobody use it.
+	 */
 	static T* instance() {
 		// assert(_Instance != NULL);
 		return &_instance;

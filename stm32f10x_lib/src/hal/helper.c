@@ -94,7 +94,7 @@ void send_byte(uint8_t b) {
 	USART_SendData(USART2, b);
 }
 
-void send_string(const char* s) {
+void println(const char* s) {
 	uint8_t i = 0;
 	while (s[i] != 0x00) {
 		send_byte((uint8_t) s[i]);

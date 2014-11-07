@@ -4,7 +4,8 @@
 #pragma once
 
 #include "gpio.h"
-#include "api/interrupt.h"
+#include "interrupt.h"
+#include "controller/intcontroller.h"
 
 class DigitalInput: public Gpio, public Interrupt {
 public:
@@ -42,5 +43,14 @@ public:
 	bool read();
 
 	// Interrupt
+
+	virtual inline void registerInterrupt() {
+		IntCtrl::instance()->registerInt(this, _pin);
+	}
+
+	virtual inline void unregisterInterrupt() {
+		IntCtrl::instance()->unregisterInt(_pin);
+	}
+
 	virtual void irq();
 };

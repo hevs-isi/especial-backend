@@ -24,18 +24,21 @@ public:
 	 * @brief The state of an input or output.
 	 */
 	typedef enum State_t {
-		Off = -1, On = 1, Invalid = 0
+		Off = -1, /*!< GPIO is OFF */
+		On = 1, /*!< GPIO is ON */
+		Invalid = 0 /*!< Invalid state (not initialized) */
 	} State;
 
 	/**
-	 * @brief The GPIO port and pin to initialize a GPIO.
+	 * @brief The GPIO port and pin used to initialize the GPIO.
 	 */
 	typedef struct Pin_t {
-		uint8_t port; // from 'A' to 'G' (included)
-		uint32_t pin; // 1 << pin
+		uint8_t port; /*!< Port letter, from 'A' to 'G' (included) */
+		uint8_t pinNumber; /*!< Pin number, from 0 to 15 */
+		uint32_t pin; /*!< Shifted pin number (1 << number) */
 
 		Pin_t(uint8_t port_, uint8_t pin_) :
-				port(port_), pin(1 << pin_) {
+				port(port_), pinNumber(pin_), pin(1 << pin_) {
 		}
 	} Pin;
 
@@ -52,10 +55,13 @@ public:
 	virtual bool initialize() = 0;
 
 protected:
+	/** Pin of the GPIO */
 	Pin _pin;
+
+	/** Current value of the GPIO */
 	State _state;
 
-	// Conversions from Pin to Cortex registers
+	// Conversions from Pin to registers
 	const uint32_t gpio_port_rcc = _ports_rcc.at(_pin.port);
 	GPIO_TypeDef* gpio_port_base = _ports_base.at(_pin.port);
 
