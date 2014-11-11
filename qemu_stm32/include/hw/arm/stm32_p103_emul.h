@@ -14,21 +14,25 @@
 #define STM32_P103_EMUL_H_
 
 typedef enum {
-	DIGITAL_OUT = 0, DIGITAL_IN = 1
+	DIGITAL_OUT = 0, // The value of a digital output has changed
+	DIGITAL_IN = 1
 } P103PerId;
 
+
 /**
- * Post an event when the value of a digital output has changed.
+ * Helper function used to post an event when the value of a digital output has changed.
+ * Contains the output port, pin and value.
  */
-inline void post_event_digital_out(uint32_t id, uint32_t data);
+inline void post_event_digital_out(uint8_t port, uint8_t pin, uint32_t value);
 
 
 
 
 int stm32p103_emul_init(void);
 
-void* stm32p103_emul_event_post(P103PerId periph, uint32_t id, uint32_t data);
+void* stm32p103_emul_event_post(P103PerId periph, uint8_t port, uint8_t pin, uint32_t value);
 
 int stm32p103_emul_exit(void);
+
 
 #endif /* STM32_P103_EMUL_H_ */

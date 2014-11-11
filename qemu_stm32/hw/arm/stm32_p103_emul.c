@@ -23,7 +23,7 @@
 		printf("stm32p103_emul: " fmt, ## __VA_ARGS__);
 
 #define PRINT_CMD(x) \
-		printf(CMD_STR_PATTERN, x->data.periph, x->data.id, x->data.data)
+		printf(CMD_STR_PATTERN, x->data.periph, x->data.port, x->data.pin, x->data.value)
 #else
 #define DBG(fmt, ...) \
 		do { } while (0)
@@ -38,7 +38,7 @@
 static const char HOST_PATTERN[] = "localhost:%d";
 
 static const uint32_t TCP_CMD_PORT = 14001;
-static const char CMD_STR_PATTERN[] = "{\"periph\": %d, \"id\": %d, \"data\": %d}\n";
+static const char CMD_STR_PATTERN[] = "{\"periph\":%d,\"pin\":{\"port\":\"%c\",\"nbr\":%d},\"value\":%d}\n";
 
 static const uint32_t TCP_EVT_PORT = 14002;
 
@@ -47,9 +47,10 @@ static const uint32_t TCP_EVT_PORT = 14002;
 typedef struct P103Cmd {
 	QSIMPLEQ_ENTRY(P103Cmd) entry; // element in the queue
 	struct {
-		P103PerId periph;
-		uint32_t id;
-		uint32_t data;
+		P103PerId periph;	// Action id
+		uint8_t port;		// GPIO port
+		uint8_t pin;		// GPIO pin number
+		uint32_t value;		// Action value
 	} data;
 } P103Cmd;
 
@@ -57,7 +58,7 @@ typedef struct P103EmulState {
 
 	/* Send commands outside QEMU (to the monitor / GUI) */
 	QSIMPLEQ_HEAD(cmd_list, P103Cmd) cmd_list; // queue of commands
-	uint32_t cmd_nbr;
+	uint32_t cmd_list_size; // size of the command list
 	uint32_t cmd_thread_terminate;
 	QemuThread cmd_thread_id;
 	QemuMutex cmd_mutex; // condition variable and associated mutex
@@ -75,8 +76,9 @@ typedef struct P103EmulState {
 static P103EmulState p103_state;
 
 /* Helper functions */
-inline void post_event_digital_out(uint32_t id, uint32_t data) {
-	stm32p103_emul_event_post(DIGITAL_OUT, id, data);
+
+inline void post_event_digital_out(uint8_t port, uint8_t pin, uint32_t value) {
+	stm32p103_emul_event_post(DIGITAL_OUT, port, pin, value);
 }
 
 /**
@@ -88,28 +90,29 @@ void event_queue_add(P103Cmd *e) {
 	// Insert at the end of the queue the new event
 	qemu_mutex_lock(&p103_state.cmd_mutex);
 	QSIMPLEQ_INSERT_TAIL(&(p103_state.cmd_list), e, entry);
-	p103_state.cmd_nbr += 1;
+	p103_state.cmd_list_size += 1;
 	qemu_cond_signal(&p103_state.cmd_cond);
 	qemu_mutex_unlock(&p103_state.cmd_mutex);
 }
 
 /** Public functions */
 
-void* stm32p103_emul_event_post(P103PerId periph, uint32_t id, uint32_t data) {
+void* stm32p103_emul_event_post(P103PerId periph, uint8_t port, uint8_t pin, uint32_t value) {
 	P103Cmd *cmd;
 
 	// Create the event
 	cmd = g_malloc(sizeof(P103Cmd));
 	cmd->data.periph = periph;
-	cmd->data.id = id;
-	cmd->data.data = data;
+	cmd->data.port = port;
+	cmd->data.pin = pin;
+	cmd->data.value = value;
 	event_queue_add(cmd); // Add it in the queue
 
-	DBG("post command, size %02d: ", p103_state.cmd_nbr);
+	DBG("cmd queued, size %02d: ", p103_state.cmd_list_size);
 	PRINT_CMD(cmd);
 
-	if (p103_state.cmd_nbr > 16)
-		ERR("WARN: %d commands in the queue\n", p103_state.cmd_nbr);
+	if (p103_state.cmd_list_size > 16)
+		ERR("WARN: %d commands in the queue\n", p103_state.cmd_list_size);
 
 	return NULL;
 }
@@ -151,9 +154,10 @@ static void *stm32p103_emul_cmd_thread(void *arg) {
 				cmd = QSIMPLEQ_FIRST(&state->cmd_list);
 
 				char cmd_str[512];
+				// Format the message as JSON
 				size_t count = snprintf(cmd_str, sizeof(cmd_str),
-						CMD_STR_PATTERN, cmd->data.periph, cmd->data.id,
-						cmd->data.data);
+						CMD_STR_PATTERN, cmd->data.periph, cmd->data.port,
+						cmd->data.pin, cmd->data.value);
 				int res = write(state->cmd_sock, cmd_str, count);
 				if (res == -1) {
 					ERR("failed to send\n");
@@ -166,10 +170,9 @@ static void *stm32p103_emul_cmd_thread(void *arg) {
 				// Command processed successfully
 				else {
 					QSIMPLEQ_REMOVE_HEAD(&state->cmd_list, entry);
-					state->cmd_nbr -= 1;
-
-					DBG("send command, rest %02d: ", state->cmd_nbr);
-					PRINT_CMD(cmd);
+					state->cmd_list_size -= 1;
+					// DBG("send command, rest %02d: ", state->cmd_list_size);
+					// PRINT_CMD(cmd);
 				}
 			}
 			qemu_mutex_unlock(&state->cmd_mutex);
@@ -245,7 +248,7 @@ int stm32p103_emul_init(void) {
 
 	// State initialization
 	QSIMPLEQ_INIT(&p103_state.cmd_list);
-	p103_state.cmd_nbr = 0;	// empty queue
+	p103_state.cmd_list_size = 0;	// empty queue
 	p103_state.cmd_thread_terminate = 0;
 	qemu_mutex_init(&p103_state.cmd_mutex);
 	qemu_cond_init(&p103_state.cmd_cond);
