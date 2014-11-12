@@ -14,26 +14,15 @@
 #include "qemu/queue.h"
 
 #include "hw/arm/stm32_p103_emul.h"
+#include "hw/arm/stm32.h"
 
-/* Debug print:  #define or #undef */
-#define STM32_P103_EMUL_DEBUG
-
-#ifdef STM32_P103_EMUL_DEBUG
-#define DBG(fmt, ...) \
-		printf("stm32p103_emul: " fmt, ## __VA_ARGS__);
-
+#ifdef STM32_P103_DEBUG
 #define PRINT_CMD(x) \
 		printf(CMD_STR_PATTERN, x->data.periph, x->data.port, x->data.pin, x->data.value)
 #else
-#define DBG(fmt, ...) \
-		do { } while (0)
-
 #define PRINT_CMD(x) \
 		do { } while (0)
 #endif
-
-#define ERR(fmt, ...) \
-		fprintf(stderr, "stm32p103_emul: " fmt, ## __VA_ARGS__)
 
 static const char HOST_PATTERN[] = "localhost:%d";
 
@@ -108,11 +97,11 @@ void* stm32p103_emul_event_post(P103PerId periph, uint8_t port, uint8_t pin, uin
 	cmd->data.value = value;
 	event_queue_add(cmd); // Add it in the queue
 
-	DBG("cmd queued, size %02d: ", p103_state.cmd_list_size);
+	DBG("_emul: cmd queued, size %02d: ", p103_state.cmd_list_size);
 	PRINT_CMD(cmd);
 
 	if (p103_state.cmd_list_size > 16)
-		ERR("WARN: %d commands in the queue\n", p103_state.cmd_list_size);
+		ERR("_emul: %d commands in the queue\n", p103_state.cmd_list_size);
 
 	return NULL;
 }
@@ -124,19 +113,19 @@ static void *stm32p103_emul_cmd_thread(void *arg) {
 	P103EmulState *state = arg; // program state
 	P103Cmd *cmd;
 
-	DBG("%s started\n", __FUNCTION__);
+	DBG("_emul: %s started\n", __FUNCTION__);
 
 	char host_str[255];
 	snprintf(host_str, sizeof(host_str), HOST_PATTERN, TCP_CMD_PORT);
 	state->cmd_sock = inet_connect(host_str, NULL);
 
 	if (state->cmd_sock == -1) {
-		ERR("failed to connect to %s\n", host_str);
-		ERR("%s terminated\n\n", __FUNCTION__);
+		ERR("_emul: failed to connect to %s\n", host_str);
+		ERR("_emul: %s terminated\n\n", __FUNCTION__);
 		return NULL;
 	}
 
-	DBG("connected to %s\n\n", host_str);
+	DBG("_emul: connected to %s\n\n", host_str);
 
 	while (1) {
 		/* Wait on command to process */
@@ -160,8 +149,8 @@ static void *stm32p103_emul_cmd_thread(void *arg) {
 						cmd->data.pin, cmd->data.value);
 				int res = write(state->cmd_sock, cmd_str, count);
 				if (res == -1) {
-					ERR("failed to send\n");
-					ERR("%s terminated\n", __FUNCTION__);
+					ERR("_emul: failed to send\n");
+					ERR("_emul: %s terminated\n", __FUNCTION__);
 					qemu_mutex_unlock(&state->cmd_mutex);
 					g_free(cmd);
 					return NULL;
@@ -180,7 +169,7 @@ static void *stm32p103_emul_cmd_thread(void *arg) {
 		}
 	}
 
-	DBG("%s terminated\n", __FUNCTION__);
+	DBG("_emul: %s terminated\n", __FUNCTION__);
 	return NULL;
 }
 
@@ -190,19 +179,19 @@ static void *stm32p103_emul_cmd_thread(void *arg) {
 static void *stm32p103_emul_evt_handle(void *arg) {
 	P103EmulState *state = arg; // program state
 
-	DBG("%s started\n", __FUNCTION__);
+	DBG("_emul: %s started\n", __FUNCTION__);
 
 	char host_str[255];
 	snprintf(host_str, sizeof(host_str), HOST_PATTERN, TCP_EVT_PORT);
 	state->evt_sock = inet_connect(host_str, NULL);
 
 	if (state->evt_sock == -1) {
-		ERR("failed to connect to %s\n", host_str);
-		ERR("%s terminated\n\n", __FUNCTION__);
+		ERR("_emul: failed to connect to %s\n", host_str);
+		ERR("_emul: %s terminated\n\n", __FUNCTION__);
 		return NULL;
 	}
 
-	DBG("connected to %s\n\n", host_str);
+	DBG("_emul: connected to %s\n\n", host_str);
 
 	uint32_t data;
 	while(1) {
@@ -212,11 +201,11 @@ static void *stm32p103_emul_evt_handle(void *arg) {
 		size_t n = read(state->evt_sock, &data, 4);
 		data = ntohl(data);
 		if(n != 4) {
-			DBG("Read %d. End !\n", (int)n);
-			DBG("Read: %d\n\n", data);
+			DBG("_emul: Read %d. End !\n", (int)n);
+			DBG("_emul: Read: %d\n\n", data);
 			break; // Connection closed or error
 		}
-		DBG("Read OK: %d\n", data);
+		DBG("_emul: Read OK: %d\n", data);
 
 		/*read(sp6->evt_sock, &per_id, 4);
 		per_id = ntohl(per_id);
@@ -239,12 +228,12 @@ static void *stm32p103_emul_evt_handle(void *arg) {
 		}*/
 	}
 
-	DBG("%s terminated\n", __FUNCTION__);
+	DBG("_emul: %s terminated\n", __FUNCTION__);
 	return NULL;
 }
 
 int stm32p103_emul_init(void) {
-	DBG("%s\n", __FUNCTION__);
+	DBG("_emul: %s\n", __FUNCTION__);
 
 	// State initialization
 	QSIMPLEQ_INIT(&p103_state.cmd_list);
@@ -263,7 +252,7 @@ int stm32p103_emul_init(void) {
 }
 
 int stm32p103_emul_exit(void) {
-	DBG("%s\n", __FUNCTION__);
+	DBG("_emul: %s\n", __FUNCTION__);
 
 	p103_state.cmd_thread_terminate = 1;
 	qemu_cond_signal(&p103_state.cmd_cond);

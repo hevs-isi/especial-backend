@@ -149,7 +149,7 @@ static void stm32_gpio_GPIOx_ODR_write(Stm32Gpio *s, uint32_t new_value)
     changed = old_value ^ new_value;
 
     /* Get changed pins that are outputs - we will not touch input pins */
-    changed_out = changed & s->dir_mask;
+    changed_out = changed & s->dir_mask; // mask output = 1
 
     if (changed_out) {
         for (pin = 0; pin < STM32_GPIO_PIN_COUNT; pin++) {
@@ -157,6 +157,7 @@ static void stm32_gpio_GPIOx_ODR_write(Stm32Gpio *s, uint32_t new_value)
              * the output IRQ.
              */
             if (changed_out & BIT(pin)) {
+            	DBG("Pin is: %d\n", pin);
                 qemu_set_irq(
                         /* The "irq_intercept_out" command in the qtest
                            framework overwrites the out IRQ array in the
@@ -171,6 +172,43 @@ static void stm32_gpio_GPIOx_ODR_write(Stm32Gpio *s, uint32_t new_value)
             }
         }
     }
+}
+
+/**
+ * Trigger an IRQ when a value is written to an output.
+ * Set the new register value and trigger the IRQ for the pin number. Do nothing
+ * if the pin if not configured as output.
+ *
+ * All write will trigger an interrupt (no edge detection). This is an updated version
+ * of the original `stm32_gpio_GPIOx_ODR_write` function.
+ */
+static void stm32_gpio_trigger_irq(Stm32Gpio *s, uint32_t new_value, uint16_t pin_nbr) {
+	unsigned pin;	// The pin number as Int. If pin_nbr is 0x1000, pin is 12
+
+	// Check if it is an output, else do nothing
+	pin_nbr = pin_nbr & s->dir_mask; // mask output = 1
+
+	// Update register value.
+	// Per documentation, the upper 16 bits always read as 0.
+	s->GPIOx_ODR = new_value & 0x0000ffff;
+
+	for (pin = 0; pin < STM32_GPIO_PIN_COUNT; pin++) {
+		// Write to this pin.
+		// Update the output IRQ with the corresponding output state.
+		if (pin_nbr & BIT(pin)) {
+			qemu_set_irq(
+					/* The "irq_intercept_out" command in the qtest
+					   framework overwrites the out IRQ array in the
+					   NamedGPIOList structure (via the
+					   qemu_irq_intercept_out procedure).  So we need
+					   to reference this structure directly (rather than
+					   use our local s->out_irq array) in order for
+					   the unit tests to work. This is something of a hack,
+					   but I don't have a solution yet. */
+					s->busdev.parent_obj.gpios.lh_first->out[pin],
+					(s->GPIOx_ODR & BIT(pin)) ? 1 : 0);
+		}
+	}
 }
 
 static uint64_t stm32_gpio_read(void *opaque, hwaddr offset,
@@ -201,18 +239,22 @@ static uint64_t stm32_gpio_read(void *opaque, hwaddr offset,
         default:
             STM32_BAD_REG(offset, size);
             return 0;
-    }
+	}
 }
 
 static void stm32_gpio_write(void *opaque, hwaddr offset,
                        uint64_t value, unsigned size)
 {
     uint32_t set_mask, reset_mask;
+    uint16_t pin_nbr;
     Stm32Gpio *s = (Stm32Gpio *)opaque;
 
     assert(size == 4);
 
     stm32_rcc_check_periph_clk((Stm32Rcc *)s->stm32_rcc, s->periph);
+
+    // Get the ping number (from 0 to (STM32_GPIO_PIN_COUNT - 1) = 15)
+    pin_nbr = (uint16_t)(value & 0x0000ffff);
 
     switch (offset) {
         case GPIOx_CRL_OFFSET:
@@ -227,10 +269,16 @@ static void stm32_gpio_write(void *opaque, hwaddr offset,
             STM32_WARN_RO_REG(offset);
             break;
         case GPIOx_ODR_OFFSET:
-            stm32_gpio_GPIOx_ODR_write(s, value);
+        	DBG("Write 1: 0x%x\n", (uint16_t)value);
+        	stm32_gpio_GPIOx_ODR_write(s, value);
             break;
+
+        /**
+         * A bit set correspond to set the output to Off with `led.set(false);`.
+         * Value `0x1000` corresponds to output pin number 12.
+         */
         case GPIOx_BSRR_OFFSET:
-            /* Setting a bit sets or resets the corresponding bit in the output
+        	/* Setting a bit sets or resets the corresponding bit in the output
              * register.  The lower 16 bits perform resets, and the upper 16
              * bits perform sets.  Register is write-only and so does not need
              * to store a value.  Sets take priority over resets, so we do
@@ -238,15 +286,21 @@ static void stm32_gpio_write(void *opaque, hwaddr offset,
              */
             set_mask = value & 0x0000ffff;
             reset_mask = ~(value >> 16) & 0x0000ffff;
-            stm32_gpio_GPIOx_ODR_write(s,
-                    (s->GPIOx_ODR & reset_mask) | set_mask);
+            // stm32_gpio_GPIOx_ODR_write(s, (s->GPIOx_ODR & reset_mask) | set_mask);
+            stm32_gpio_trigger_irq(s, (s->GPIOx_ODR & reset_mask) | set_mask, pin_nbr);
             break;
+
+        /**
+         * A bit reset correspond to set the output to On with `led.set(true);`.
+         * Value `0x1000` corresponds to output pin number 12.
+         */
         case GPIOx_BRR_OFFSET:
             /* Setting a bit resets the corresponding bit in the output
              * register.  Register is write-only and so does not need to store
              * a value. */
             reset_mask = ~value & 0x0000ffff;
-            stm32_gpio_GPIOx_ODR_write(s, s->GPIOx_ODR & reset_mask);
+            // stm32_gpio_GPIOx_ODR_write(s, s->GPIOx_ODR & reset_mask);
+            stm32_gpio_trigger_irq(s, s->GPIOx_ODR & reset_mask, pin_nbr);
             break;
         case GPIOx_LCKR_OFFSET:
             /* Locking is not implemented */
@@ -268,7 +322,7 @@ static const MemoryRegionOps stm32_gpio_ops = {
 
 static void stm32_gpio_reset(DeviceState *dev)
 {
-    int pin;
+    // int pin;
     Stm32Gpio *s = STM32_GPIO(dev);
 
     s->GPIOx_CRy[0] = 0x44444444;
@@ -276,9 +330,12 @@ static void stm32_gpio_reset(DeviceState *dev)
     s->GPIOx_ODR = 0;
     s->dir_mask = 0; /* input = 0, output = 1 */
 
-    for(pin = 0; pin < STM32_GPIO_PIN_COUNT; pin++) {
-        qemu_irq_lower(s->out_irq[pin]);
-    }
+    // Do not set outputs to `0` on reset.
+    // This is done by the HAL C++ code
+
+    // for(pin = 0; pin < STM32_GPIO_PIN_COUNT; pin++) {
+    //    qemu_irq_lower(s->out_irq[pin]);
+    // }
 
     /* Leave input state as it is - only outputs and config are affected
      * by the GPIO reset. */

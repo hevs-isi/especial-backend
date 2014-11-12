@@ -28,10 +28,23 @@
 #include "hw/sysbus.h"
 #include "qemu/log.h"
 
-#include "stm32_p103_emul.h"   // Emulation
-
 void stm32_hw_warn(const char *fmt, ...)
     __attribute__ ((__format__ (__printf__, 1, 2)));
+
+/* Debug print:  #define or #undef */
+#define STM32_P103_DEBUG true
+
+
+#ifdef STM32_P103_DEBUG
+#define DBG(fmt, ...) \
+		printf("stm32p103" fmt, ## __VA_ARGS__);
+#else
+#define DBG(fmt, ...) \
+		do { } while (0)
+#endif
+
+#define ERR(fmt, ...) \
+		fprintf(stderr, "stm32p103" fmt, ## __VA_ARGS__)
 
 
 /* PERIPHERALS - COMMON */
