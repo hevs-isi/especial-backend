@@ -23,7 +23,7 @@ bool DigitalOutput::initialize() {
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOC, &GPIO_InitStructure);
 
-	set(false);	// Default is OFF
+	set(false);	// Default output state is OFF
 	return true;
 }
 
