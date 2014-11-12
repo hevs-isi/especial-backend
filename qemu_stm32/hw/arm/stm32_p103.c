@@ -175,7 +175,6 @@ static void stm32_p103_init(MachineState *machine)
     //qemu_add_kbd_event_handler(stm32_p103_key_event, s);
 
 
-
     /* Connect RS232 to UART */
     stm32_uart_connect(
             (Stm32Uart *)uart2,
@@ -183,7 +182,15 @@ static void stm32_p103_init(MachineState *machine)
             STM32_USART2_NO_REMAP);
 
 
-    stm32p103_emul_init();	// QEMU TCP gateway init
+    /* QEMU TCP gateway */
+
+    stm32p103_emul_init(); // TCP clients initialization
+
+    // UART5 used to read/write debug informations from/to QEMU.
+    // UART5 cannot be used on the real target. This is a "fake" peripheral that can be used in QEMU only.
+    DeviceState *uart5 = DEVICE(object_resolve_path("/machine/stm32/uart[5]", NULL));
+    assert(uart5);
+    stm32_uart_connect((Stm32Uart *) uart5, NULL, STM32_UART5);
  }
 
 static QEMUMachine stm32_p103_machine = {

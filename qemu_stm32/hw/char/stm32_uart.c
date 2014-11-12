@@ -90,8 +90,6 @@ struct Stm32Uart {
     Stm32Gpio **stm32_gpio;
     Stm32Afio *stm32_afio;
 
-    int uart_index;
-
     uint32_t bits_per_sec;
     int64_t ns_per_char;
 
@@ -263,6 +261,12 @@ static void stm32_uart_check_tx_pin(Stm32Uart *s)
 {
     int tx_periph, tx_pin;
     int config;
+
+	// QEMU debug peripheral UART5 (hack)
+    // UART5 is used for debug only.
+	// It is not necessary to configure GPIO of this peripheral. Tests are skipped.
+	if(s->periph == STM32_UART5)
+		return; // Skip GPIO configuration tests
 
     switch(s->periph) {
         case STM32_UART1:
@@ -575,7 +579,7 @@ static void stm32_uart_USART_CR1_write(Stm32Uart *s, uint32_t new_value,
          * USART.
          */
         if(s->afio_board_map != stm32_afio_get_periph_map(s->stm32_afio, s->periph)) {
-            hw_error("Bad AFIO mapping for %s", stm32_periph_name(s->periph));
+        	hw_error("Bad AFIO mapping for %s", stm32_periph_name(s->periph));
         }
     }
 
@@ -638,7 +642,7 @@ static uint64_t stm32_uart_read(void *opaque, hwaddr offset,
         case USART_SR_OFFSET:
             return extract64(stm32_uart_USART_SR_read(s), start, length);
         case USART_DR_OFFSET:
-            stm32_uart_USART_DR_read(s, &value);
+        	stm32_uart_USART_DR_read(s, &value);
             return extract64(value, start, length);
         case USART_BRR_OFFSET:
             return extract64(s->USART_BRR, start, length);
@@ -663,6 +667,13 @@ static void stm32_uart_write(void *opaque, hwaddr offset,
     Stm32Uart *s = (Stm32Uart *)opaque;
     int start = (offset & 3) * 8;
     int length = size * 8;
+
+    // Some hack for the UART5 used only for debug in QEMU
+    if(s->periph == STM32_UART5) {
+    	// Read one byte
+    	DBG("_uart_emul: byte %c\n", (char)value);
+    	return; // Skip all registers write operations !
+    }
 
     stm32_rcc_check_periph_clk((Stm32Rcc *)s->stm32_rcc, s->periph);
 

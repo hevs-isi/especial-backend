@@ -64,6 +64,7 @@ struct Stm32Afio {
         USART1_REMAP,
         USART2_REMAP,
         USART3_REMAP,
+		UART5_REMAP, // Debug only in QEMU
         AFIO_MAPR,
         AFIO_EXTICR[AFIO_EXTICR_COUNT];
 };
@@ -139,6 +140,7 @@ static uint64_t stm32_afio_read(void *opaque, hwaddr offset,
     switch (offset) {
         case AFIO_EVCR_OFFSET:
             STM32_NOT_IMPL_REG(offset, size);
+            return 0;
             break;
         case AFIO_MAPR_OFFSET:
             return stm32_afio_AFIO_MAPR_read(s);
@@ -223,9 +225,14 @@ uint32_t stm32_afio_get_periph_map(Stm32Afio *s, stm32_periph_t periph)
             return s->USART2_REMAP;
         case STM32_UART3:
             return s->USART3_REMAP;
+
+        // FIXME: UART5 used for debug
+        case STM32_UART5:
+        	return STM32_UART5;
+
         default:
             hw_error("Invalid peripheral");
-            break;
+            return 0;
     }
 }
 
