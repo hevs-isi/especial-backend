@@ -25,6 +25,8 @@
 #include "sysemu/char.h"
 #include "qemu/bitops.h"
 
+// Used to send event received on UART5
+#include "hw/arm/stm32_p103_emul.h"
 
 
 /* DEFINITIONS*/
@@ -670,9 +672,11 @@ static void stm32_uart_write(void *opaque, hwaddr offset,
 
     // Some hack for the UART5 used only for debug in QEMU
     if(s->periph == STM32_UART5) {
-    	// Read one byte
-    	DBG("_uart_emul: byte %c\n", (char)value);
-    	return; // Skip all registers write operations !
+    	// Read one byte from the C program and send it to the monitor TCP server
+    	// DBG("_uart_emul: byte %c\n", (char) value);
+    	post_event_c((uint8_t) value);
+
+    	return; // Skip all registers write operations for UART5 !
     }
 
     stm32_rcc_check_periph_clk((Stm32Rcc *)s->stm32_rcc, s->periph);

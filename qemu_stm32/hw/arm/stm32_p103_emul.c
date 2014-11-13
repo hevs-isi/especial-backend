@@ -17,17 +17,22 @@
 #include "hw/arm/stm32.h"
 
 #ifdef STM32_P103_DEBUG
-#define PRINT_CMD(x) \
-		printf(CMD_STR_PATTERN, x->data.periph, x->data.port, x->data.pin, x->data.value)
+#define PRINT_CMD_PERIPH(x) \
+		printf(CMD_PERIPH, x->data.id, x->data.port, x->data.pin, x->data.value)
+#define PRINT_CMD_EVENT(x) \
+		printf(CMD_EVENT, x->data.id, x->data.value)
 #else
-#define PRINT_CMD(x) \
+#define PRINT_CMD_PERIPH(x) \
+		do { } while (0)
+#define PRINT_CMD_EVENT(x) \
 		do { } while (0)
 #endif
 
 static const char HOST_PATTERN[] = "localhost:%d";
 
 static const uint32_t TCP_CMD_PORT = 14001;
-static const char CMD_STR_PATTERN[] = "{\"periph\":%d,\"pin\":{\"port\":\"%c\",\"nbr\":%d},\"value\":%d}\n";
+static const char CMD_PERIPH[] = "{\"msgId\":%d,\"pin\":{\"port\":\"%c\",\"nbr\":%d},\"value\":%d}\n";
+static const char CMD_EVENT[] = "{\"msgId\":%d,\"value\":%d}\n";
 
 static const uint32_t TCP_EVT_PORT = 14002;
 
@@ -36,10 +41,10 @@ static const uint32_t TCP_EVT_PORT = 14002;
 typedef struct P103Cmd {
 	QSIMPLEQ_ENTRY(P103Cmd) entry; // element in the queue
 	struct {
-		P103PerId periph;	// Action id
-		uint8_t port;		// GPIO port
-		uint8_t pin;		// GPIO pin number
-		uint32_t value;		// Action value
+		EventId id;		//<! Action id
+		uint8_t port;		//<! GPIO port (as a letter)
+		uint8_t pin;		//<! GPIO pin number (from 0 to 15)
+		uint32_t value;		//<! Event value
 	} data;
 } P103Cmd;
 
@@ -64,10 +69,27 @@ typedef struct P103EmulState {
 // State wit attributes
 static P103EmulState p103_state;
 
+/* Private function */
+
+/**
+ * Add an event to the queue and send it through TCP.
+ * \param[in] id	the id to identify the type of the event
+ * \param[in] port	the port letter of the GPIO (if used)
+ * \param[in] pin	the pin number of the GPIO (if used)
+ * \param[in] value	the event value
+ */
+void stm32p103_emul_event_post(EventId id, uint8_t port, uint8_t pin, uint32_t value);
+
+
 /* Helper functions */
 
 inline void post_event_digital_out(uint8_t port, uint8_t pin, uint32_t value) {
 	stm32p103_emul_event_post(DIGITAL_OUT, port, pin, value);
+}
+
+inline void post_event_c(uint8_t eventId) {
+	// Pin and port are not used
+	stm32p103_emul_event_post(C_EVENT, 0, 0, (uint32_t)(eventId));
 }
 
 /**
@@ -86,24 +108,33 @@ void event_queue_add(P103Cmd *e) {
 
 /** Public functions */
 
-void* stm32p103_emul_event_post(P103PerId periph, uint8_t port, uint8_t pin, uint32_t value) {
+void stm32p103_emul_event_post(EventId id, uint8_t port, uint8_t pin, uint32_t value) {
 	P103Cmd *cmd;
+
+	const uint32_t size = p103_state.cmd_list_size;
 
 	// Create the event
 	cmd = g_malloc(sizeof(P103Cmd));
-	cmd->data.periph = periph;
-	cmd->data.port = port;
-	cmd->data.pin = pin;
+	cmd->data.id = id;
+	cmd->data.port = port; // Optional if it is an event
+	cmd->data.pin = pin;   // Optional if it is an event
 	cmd->data.value = value;
 	event_queue_add(cmd); // Add it in the queue
 
-	DBG("_emul: cmd queued, size %02d: ", p103_state.cmd_list_size);
-	PRINT_CMD(cmd);
+	DBG("_emul: cmd queued: ");
+	if(id == C_EVENT)
+		PRINT_CMD_EVENT(cmd);
+	else
+		PRINT_CMD_PERIPH(cmd);
 
-	if (p103_state.cmd_list_size > 16)
-		ERR("_emul: %d commands in the queue\n", p103_state.cmd_list_size);
-
-	return NULL;
+	// Exit the program if too many messages are stored
+	if (size > 1023) {
+		ERR("_emul: %04d commands in the queue.\n", size);
+		ERR("_emul: Program exit !\n\n");
+		exit(-1);	// Return an error code
+	}
+	else if (size > 15)
+		DBG("_emul: %04d commands in the queue\n", size);
 }
 
 /**
@@ -113,9 +144,13 @@ static void *stm32p103_emul_cmd_thread(void *arg) {
 	P103EmulState *state = arg; // program state
 	P103Cmd *cmd;
 
+	char host_str[32];
+
+	char cmd_str[128];
+	size_t count;
+
 	DBG("_emul: %s started\n", __FUNCTION__);
 
-	char host_str[255];
 	snprintf(host_str, sizeof(host_str), HOST_PATTERN, TCP_CMD_PORT);
 	state->cmd_sock = inet_connect(host_str, NULL);
 
@@ -142,11 +177,18 @@ static void *stm32p103_emul_cmd_thread(void *arg) {
 				// Pop the first command from the queue
 				cmd = QSIMPLEQ_FIRST(&state->cmd_list);
 
-				char cmd_str[512];
-				// Format the message as JSON
-				size_t count = snprintf(cmd_str, sizeof(cmd_str),
-						CMD_STR_PATTERN, cmd->data.periph, cmd->data.port,
-						cmd->data.pin, cmd->data.value);
+				// Format messages to JSON frames
+				if(cmd->data.id == C_EVENT) {
+					count = snprintf(cmd_str, sizeof(cmd_str),
+							CMD_EVENT, cmd->data.id, cmd->data.value);
+				}
+				else if(cmd->data.id == DIGITAL_OUT) {
+					count = snprintf(cmd_str, sizeof(cmd_str),
+							CMD_PERIPH, cmd->data.id, cmd->data.port,
+							cmd->data.pin, cmd->data.value);
+				}
+
+				// Send the JSON message
 				int res = write(state->cmd_sock, cmd_str, count);
 				if (res == -1) {
 					ERR("_emul: failed to send\n");
@@ -160,8 +202,6 @@ static void *stm32p103_emul_cmd_thread(void *arg) {
 				else {
 					QSIMPLEQ_REMOVE_HEAD(&state->cmd_list, entry);
 					state->cmd_list_size -= 1;
-					// DBG("send command, rest %02d: ", state->cmd_list_size);
-					// PRINT_CMD(cmd);
 				}
 			}
 			qemu_mutex_unlock(&state->cmd_mutex);
