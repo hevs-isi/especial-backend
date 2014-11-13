@@ -8,7 +8,7 @@
 /** Events ID (uint8_t) */
 typedef enum EventId_t {
 	SECTION_START = '0', /*!< Start of the main program */
-	SECTION_END_INIT = 'A', /*!< Components initialization will be called */
+	SECTION_INIT_END = 'A', /*!< Components initialization will be called */
 	SECTION_LOOP_START = 'B', /*!< While loop going to start */
 	SECTION_LOOP_TICK = 'C', /*!< While loop step */
 	SECTION_LOOP_EXIT = 'F' /*!< While loop is terminated */
