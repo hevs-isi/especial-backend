@@ -19,6 +19,8 @@ typedef enum {
 	C_EVENT 	= 0x10,	//!< Event sent from the C code
 } EventId;
 
+// Value written by the monitor to ack an event
+static const uint16_t MONITOR_ACK_READ = 0x1FF;
 
 /**
  * Helper function used to post an event when a value has been written to a digital output.
@@ -32,6 +34,11 @@ inline void post_event_digital_out(uint8_t port, uint8_t pin, uint32_t value);
  */
 inline void post_event_c(uint8_t eventId);
 
+
+/**
+ * Wait until the event has been confirmed by the monitor server.
+ */
+void event_wait_ack(void);
 
 
 int stm32p103_emul_init(void);

@@ -63,6 +63,8 @@ typedef struct P103EmulState {
     int evt_sock; // TCP socket
     QSIMPLEQ_HEAD(event_list, P103Cmd) evt_list; // queue of events
     QemuThread evt_thread_id;
+    QemuMutex evt_mutex;
+    QemuCond evt_ack_cond; // signal when the event has been confirmed
 
 } P103EmulState;
 
@@ -90,6 +92,13 @@ inline void post_event_digital_out(uint8_t port, uint8_t pin, uint32_t value) {
 inline void post_event_c(uint8_t eventId) {
 	// Pin and port are not used
 	stm32p103_emul_event_post(C_EVENT, 0, 0, (uint32_t)(eventId));
+}
+
+
+void event_wait_ack(void) {
+	qemu_mutex_lock(&p103_state.evt_mutex);
+	qemu_cond_wait(&p103_state.evt_ack_cond, &p103_state.evt_mutex);
+	qemu_mutex_unlock(&p103_state.evt_mutex);
 }
 
 /**
@@ -138,7 +147,7 @@ void stm32p103_emul_event_post(EventId id, uint8_t port, uint8_t pin, uint32_t v
 }
 
 /**
- * Thread to sent commands outside QEMU through a TCP socket.
+ * Thread used to send commands outside QEMU through a TCP socket.
  */
 static void *stm32p103_emul_cmd_thread(void *arg) {
 	P103EmulState *state = arg; // program state
@@ -163,7 +172,7 @@ static void *stm32p103_emul_cmd_thread(void *arg) {
 	DBG("_emul: connected to %s\n\n", host_str);
 
 	while (1) {
-		/* Wait on command to process */
+		// Wait on command to process
 		qemu_mutex_lock(&state->cmd_mutex);
 		qemu_cond_wait(&state->cmd_cond, &state->cmd_mutex);
 		qemu_mutex_unlock(&state->cmd_mutex);
@@ -208,8 +217,6 @@ static void *stm32p103_emul_cmd_thread(void *arg) {
 			g_free(cmd);
 		}
 	}
-
-	DBG("_emul: %s terminated\n", __FUNCTION__);
 	return NULL;
 }
 
@@ -233,42 +240,38 @@ static void *stm32p103_emul_evt_handle(void *arg) {
 
 	DBG("_emul: connected to %s\n\n", host_str);
 
-	uint32_t data;
+	// Data read from the monitor server
+	typedef union
+	{
+	    uint32_t nbr;
+	    uint8_t byte[4];
+	} Value;
+	Value data;
+
 	while(1) {
 
 		// Read from server
-		DBG("Wait to read...\n");
 		size_t n = read(state->evt_sock, &data, 4);
-		data = ntohl(data);
-		if(n != 4) {
-			DBG("_emul: Read %d. End !\n", (int)n);
-			DBG("_emul: Read: %d\n\n", data);
-			break; // Connection closed or error
+		data.nbr = ntohl(data.nbr);
+
+		if(n == 0) {
+			break;
 		}
-		DBG("_emul: Read OK: %d\n", data);
+		else if(n != 4) {
+			DBG("_emul: Read %d. End !\n", (int)n);
+		}
+		else {
+			DBG("_emul: Read [0]=%c, [1]=%c, [2]=%c, [3]=%c\n", data.byte[0], data.byte[1], data.byte[2], data.byte[3]);
+			DBG("_emul: Data=%d\n", (int)data.nbr);
 
-		/*read(sp6->evt_sock, &per_id, 4);
-		per_id = ntohl(per_id);
-		read(sp6->evt_sock, &action, 4);
-		action = ntohl(action);
-		read(sp6->evt_sock, &len, 4);
-		len = ntohl(len);
-		DBG("%s p: 0x%08X, a: 0x%08X, l: 0x%08X\n", __FUNCTION__, per_id, action, len);
+			// TODO: use JSON or check the value of the message here...
 
-		buf = malloc(len);
-		read(sp6->evt_sock, buf, len);
-
-		switch (per_id) {
-			case SP6_BTN:
-				reptar_sp6_btns_event_process(action, buf, len);
-				free(buf);
-				break;
-			default:
-				DBG("%s invalid peripheral id\n", __FUNCTION__);
-		}*/
+			// Event confirmed from the Monitor server
+			qemu_mutex_lock(&p103_state.evt_mutex);
+			qemu_cond_signal(&p103_state.evt_ack_cond);
+			qemu_mutex_unlock(&p103_state.evt_mutex);
+		}
 	}
-
-	DBG("_emul: %s terminated\n", __FUNCTION__);
 	return NULL;
 }
 
@@ -276,11 +279,17 @@ int stm32p103_emul_init(void) {
 	DBG("_emul: %s\n", __FUNCTION__);
 
 	// State initialization
+
+	// TCP write
 	QSIMPLEQ_INIT(&p103_state.cmd_list);
 	p103_state.cmd_list_size = 0;	// empty queue
 	p103_state.cmd_thread_terminate = 0;
 	qemu_mutex_init(&p103_state.cmd_mutex);
 	qemu_cond_init(&p103_state.cmd_cond);
+
+	// TCP read
+	qemu_mutex_init(&p103_state.evt_mutex);
+	qemu_cond_init(&p103_state.evt_ack_cond);
 
 	// Thread to send commands outside QEMU
 	qemu_thread_create(&p103_state.cmd_thread_id, "cmd", stm32p103_emul_cmd_thread, &p103_state, QEMU_THREAD_JOINABLE);
@@ -298,6 +307,7 @@ int stm32p103_emul_exit(void) {
 	qemu_cond_signal(&p103_state.cmd_cond);
 	qemu_thread_join(&p103_state.cmd_thread_id);
 
+	qemu_cond_signal(&p103_state.evt_ack_cond);
 	qemu_thread_join(&p103_state.evt_thread_id);
 
 	return 0;

@@ -643,7 +643,17 @@ static uint64_t stm32_uart_read(void *opaque, hwaddr offset,
     switch (offset & 0xfffffffc) {
         case USART_SR_OFFSET:
             return extract64(stm32_uart_USART_SR_read(s), start, length);
+
+        // Read an uint16_t from UART
         case USART_DR_OFFSET:
+        	// Read UART5 = DR register
+            if(s->periph == STM32_UART5) {
+            	// Wait on the event confirmation to continue running the C code.
+            	// This make the UART read a blocking method.
+            	event_wait_ack();
+            	return MONITOR_ACK_READ; // Confirmation written back to UART5 register
+            }
+            // Normal behavior for other UARTs
         	stm32_uart_USART_DR_read(s, &value);
             return extract64(value, start, length);
         case USART_BRR_OFFSET:
