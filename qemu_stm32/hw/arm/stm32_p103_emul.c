@@ -261,8 +261,8 @@ static void *stm32p103_emul_evt_handle(void *arg) {
 			DBG("_emul: Read %d. End !\n", (int)n);
 		}
 		else {
-			DBG("_emul: Read [0]=%c, [1]=%c, [2]=%c, [3]=%c\n", data.byte[0], data.byte[1], data.byte[2], data.byte[3]);
-			DBG("_emul: Data=%d\n", (int)data.nbr);
+			DBG("_emul: Read [3]='%c', [2]='%c', [1]='%c', [0]='%c'\n", data.byte[3], data.byte[2], data.byte[1], data.byte[0]);
+			DBG("_emul: Data=0x%x\n", (int)data.nbr);
 
 			// TODO: use JSON or check the value of the message here...
 
