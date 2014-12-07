@@ -23,17 +23,18 @@ void led_toggle(void);
  *   No parity bit
  *   No hardware flow control
  */
-void init_rs232(void);
-
-void enable_rs232_interrupts(void);
+void init_usart2(void);
 
 void enable_rs232(void);
+
+// void enable_rs232_interrupts(void);
 
 void send_byte(uint8_t b);
 
 void println(const char* s);
 
 void busy_loop(uint32_t delay);
+
 
 #ifdef __cplusplus
 }

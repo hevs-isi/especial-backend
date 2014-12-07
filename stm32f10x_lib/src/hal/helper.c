@@ -30,9 +30,10 @@ void enable_rs232(void) {
 	USART_Cmd(USART2, ENABLE);
 }
 
-void init_rs232(void) {
+void init_usart2(void) {
 	USART_InitTypeDef USART_InitStructure;
 	GPIO_InitTypeDef GPIO_InitStructure;
+	USART_ClockInitTypeDef USART_ClockInitStructure;
 
 	/* Enable peripheral clocks. */
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO, ENABLE);
@@ -41,39 +42,54 @@ void init_rs232(void) {
 	/* Configure USART2 Rx pin as floating input. */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_3;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
 	/* Configure USART2 Tx as alternate function push-pull. */
 	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
+	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOA, &GPIO_InitStructure);
 
+	// Init clock for USART
+	USART_ClockInitStructure.USART_Clock = USART_Clock_Disable;
+	USART_ClockInitStructure.USART_CPOL = USART_CPOL_Low;
+	USART_ClockInitStructure.USART_CPHA = USART_CPHA_2Edge;
+	USART_ClockInitStructure.USART_LastBit = USART_LastBit_Disable;
+	USART_ClockInit(USART2, &USART_ClockInitStructure);
+
 	/* Configure the USART2 */
-	USART_InitStructure.USART_BaudRate = 9600;
+	USART_InitStructure.USART_BaudRate = 115200;
 	USART_InitStructure.USART_WordLength = USART_WordLength_8b;
 	USART_InitStructure.USART_StopBits = USART_StopBits_1;
 	USART_InitStructure.USART_Parity = USART_Parity_No;
-	USART_InitStructure.USART_HardwareFlowControl =
-	USART_HardwareFlowControl_None;
-	USART_InitStructure.USART_Mode = USART_Mode_Rx | USART_Mode_Tx;
+	USART_InitStructure.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
+	USART_InitStructure.USART_Mode = USART_Mode_Tx; // USART_Mode_Rx | USART_Mode_Tx;
 	USART_Init(USART2, &USART_InitStructure);
-	enable_rs232();
+
+	// USART_StructInit(&USART_InitStructure);
+	// USART_Init(USART2, &USART_InitStructure);
+
+	// Insider hack:
+	// In order to output USART2_CK, the SSOE bit in the SPI1_CR2
+	// register must be set to configure the pin in output mode.
+	SPI1->CR2 |= SPI_CR2_SSOE;
+
+	USART_Cmd(USART2, ENABLE);
 }
 
 void enable_rs232_interrupts(void) {
-	NVIC_InitTypeDef NVIC_InitStructure;
+	/*NVIC_InitTypeDef NVIC_InitStructure;
 
-	/* Enable transmit and receive interrupts for the USART2. */
+	// Enable transmit and receive interrupts for the USART2.
 	USART_ITConfig(USART2, USART_IT_TXE, DISABLE);
 	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);
 
-	/* Enable the USART2 IRQ in the NVIC module (so that the USART2 interrupt
-	 * handler is enabled). */
+	// Enable the USART2 IRQ in the NVIC module (so that the USART2 interrupt handler is enabled).
 	NVIC_InitStructure.NVIC_IRQChannel = USART2_IRQn;
 	NVIC_InitStructure.NVIC_IRQChannelSubPriority = 0;
 	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;
-	NVIC_Init(&NVIC_InitStructure);
+	NVIC_Init(&NVIC_InitStructure);*/
 }
 
 void led_toggle(void) {
@@ -86,12 +102,12 @@ void led_toggle(void) {
 }
 
 void send_byte(uint8_t b) {
-	/* Wait until the RS232 port can receive another byte. */
+	// Send next character
+	USART_SendData(USART2, (b & 0xFF));
+
+	// Wait until previous character got transfered
 	while (USART_GetFlagStatus(USART2, USART_FLAG_TXE) == RESET)
 		;
-
-	/* Send the byte */
-	USART_SendData(USART2, b);
 }
 
 void println(const char* s) {

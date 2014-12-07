@@ -31,10 +31,10 @@ public:
 	static void send_event(EventId id, bool ack = false) {
 		USART_SendData(UART5, (uint8_t) id); // Write to the DR register of UART5
 
-		// Wait until previous character got transfered
-		while (USART_GetFlagStatus(UART5, USART_FLAG_TXE) == RESET);
-
 		if (ack) {
+			// Wait until previous character got transfered
+			while (USART_GetFlagStatus(UART5, USART_FLAG_TXE) == RESET);
+
 			// Wait until the value has been validated by the monitor.
 			// UART5 DR read register is blocking
 			while (USART_ReceiveData(UART5) != MONITOR_ACK_READ);

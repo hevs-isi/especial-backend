@@ -62,11 +62,11 @@ protected:
 	State _state;
 
 	// Conversions from Pin to registers
-	const uint32_t gpio_port_rcc = _ports_rcc.at(_pin.port);
-	GPIO_TypeDef* gpio_port_base = _ports_base.at(_pin.port);
+	const uint32_t gpio_port_rcc = ports_rcc.at(_pin.port);
+	GPIO_TypeDef* gpio_port_base = ports_base.at(_pin.port);
 
-private:
+public:
 	//FIXME: optimize with an array ?
-	static const map<uint8_t, uint32_t> _ports_rcc;
-	static const map<uint8_t, GPIO_TypeDef*> _ports_base;
+	static const map<uint8_t, uint32_t> ports_rcc;
+	static const map<uint8_t, GPIO_TypeDef*> ports_base;
 };

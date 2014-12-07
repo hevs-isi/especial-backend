@@ -10,7 +10,7 @@ Gpio::Gpio(uint8_t port, uint8_t pin) :
 Gpio::~Gpio() {
 }
 
-const map<uint8_t, uint32_t> Gpio::_ports_rcc = {
+const map<uint8_t, uint32_t> Gpio::ports_rcc = {
 	{ 'A', RCC_APB2Periph_GPIOA },
 	{ 'B', RCC_APB2Periph_GPIOB },
 	{ 'C', RCC_APB2Periph_GPIOC },
@@ -20,7 +20,7 @@ const map<uint8_t, uint32_t> Gpio::_ports_rcc = {
 	{ 'G', RCC_APB2Periph_GPIOG }
 };
 
-const map<uint8_t, GPIO_TypeDef*> Gpio::_ports_base = {
+const map<uint8_t, GPIO_TypeDef*> Gpio::ports_base = {
 		{ 'A', GPIOA },
 		{ 'B', GPIOB },
 		{ 'C', GPIOC },
