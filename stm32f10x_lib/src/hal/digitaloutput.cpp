@@ -21,7 +21,7 @@ bool DigitalOutput::initialize() {
 	GPIO_InitStructure.GPIO_Pin = _pin.pin;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
+	GPIO_Init(gpio_port_base, &GPIO_InitStructure);
 
 	set(false);	// Default output state is OFF
 	return true;

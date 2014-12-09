@@ -23,9 +23,9 @@ public:
 
 	inline void set(bool state) {
 		if (state)
-			setState(On);
-		else
 			setState(Off);
+		else
+			setState(On);
 	}
 
 	inline const DigitalOutput & operator=(State state) {
