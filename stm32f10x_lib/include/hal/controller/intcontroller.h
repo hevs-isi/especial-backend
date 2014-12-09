@@ -18,30 +18,30 @@ public:
 	virtual ~IntController();
 
 	/**
-	 * @brief Register an Interrupt interface and enable interrupt for the pin.
-	 * @param[in] isr ISR calback
+	 * @brief Register an External Interrupt (EXTI) for this pin. Select one available external line (up to 16).
+	 * @param[in] isr the ISR callback for the input
 	 * @param[in] pin the gpio pin
+	 * @return `true` if success, `false` if the EXT line is already used by another port
 	 */
-	void registerInt(Interrupt* isr, Gpio::Pin pin);
+	bool registerInt(Interrupt* isr, Gpio::Pin pin);
 
 	/**
 	 * @brief Unregister an Interrupt.
 	 * @param[in] pin the gpio pin
-	 * @return `true` if success, `false` if not already registered
 	 */
-	bool unregisterInt(Gpio::Pin pin);
+	void unregisterInt(Gpio::Pin pin);
 
 	/**
-	 * @brief Call the ISR function of the GPIO.
-	 * @param[in] pinNumber the pin number of the registered ISR
+	 * @brief Call the ISR function of the corresponding input.
+	 * @param[in] exti_Line the external line number where the interrupt come from
 	 * @return `true` if success, `false` if not found (not registered)
 	 */
-	bool callIsr(uint8_t pinNumber);
+	bool callIsr(uint32_t exti_Line);
 
-public:
-	//FIXME: optimize with an array ?
-	// EXTI_Line0 to 15 corresponds to the pin number
-	static map<uint32_t, Interrupt*> _isrVector;
+private:
+	// Store ISR callback for EXTI_Line0 to 15.
+	// 16 external lines available for each pins (shared with all ports).
+	Interrupt* _isrVector[16];
 };
 
 // Use the Singleton template

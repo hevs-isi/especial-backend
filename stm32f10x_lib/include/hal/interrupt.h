@@ -20,7 +20,7 @@ public:
 	/**
 	 * @brief Helper function used to register a GPIO as an interrupt.
 	 */
-	virtual void registerInterrupt() = 0;
+	virtual bool registerInterrupt() = 0;
 
 	/**
 	 * @brief Helper function used to unregister a GPIO as an interrupt.
