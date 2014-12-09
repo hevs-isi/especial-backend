@@ -10,9 +10,6 @@ DigitalInput::DigitalInput(uint8_t port, uint8_t pin) :
 DigitalInput::~DigitalInput() {
 }
 
-/**
- * Configure the pin as input with interrupts.
- */
 bool DigitalInput::initialize() {
 	assert(_pin.port >= 'A' && _pin.port <= 'G');
 
@@ -22,11 +19,10 @@ bool DigitalInput::initialize() {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IN_FLOATING;
 	GPIO_InitStructure.GPIO_Pin = _pin.pin;
-	GPIO_Init(GPIOC, &GPIO_InitStructure);
+	GPIO_Init(gpio_port_base, &GPIO_InitStructure);
 
 	// Register as interrupt and configure the pin
-	registerInterrupt();
-	return true;
+	return registerInterrupt();
 }
 
 bool DigitalInput::read() {

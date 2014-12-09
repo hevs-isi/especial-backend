@@ -13,6 +13,10 @@ public:
 	DigitalInput(uint8_t port, uint8_t pin);
 	virtual ~DigitalInput();
 
+	/**
+	 * Configure the pin as input with interrupts.
+	 * @return `true` if success, `false` if the interrupt registration fails
+	 */
 	virtual bool initialize();
 
 	// Current cached state
@@ -42,10 +46,11 @@ public:
 
 	bool read();
 
-	// Interrupt
+	// Interrupt related
 
-	virtual inline void registerInterrupt() {
-		IntCtrl::instance()->registerInt(this, _pin);
+	// Called automatically when initialized
+	virtual inline bool registerInterrupt() {
+		return IntCtrl::instance()->registerInt(this, _pin);
 	}
 
 	virtual inline void unregisterInterrupt() {
