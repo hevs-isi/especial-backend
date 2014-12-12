@@ -15,20 +15,11 @@
 using namespace std;
 
 /**
- * @brief Control a digital input or output.
+ * Define a GPIO with a port and a pin number.
+ * Base class used for many I/O.
  */
 class Gpio {
 public:
-
-	/**
-	 * @brief The state of an input or output.
-	 */
-	typedef enum State_t {
-		Off = -1, /*!< GPIO is OFF */
-		On = 1, /*!< GPIO is ON */
-		Invalid = 0 /*!< Invalid state (not initialized) */
-	} State;
-
 	/**
 	 * @brief The GPIO port and pin used to initialize the GPIO.
 	 */
@@ -39,13 +30,12 @@ public:
 
 		Pin_t(uint8_t port_, uint8_t pin_) :
 				port(port_), pinNumber(pin_), pin(1 << pin_) {
+			assert(port >= 'A' && port <= 'G');
 		}
 	} Pin;
 
-public:
-
-	// TODO: pass the Pin struct as argument
 	Gpio(uint8_t port, uint8_t pin);
+
 	virtual ~Gpio();
 
 	/**
@@ -57,9 +47,6 @@ public:
 protected:
 	/** Pin of the GPIO */
 	Pin _pin;
-
-	/** Current value of the GPIO */
-	State _state;
 
 	// Conversions from Pin to registers
 	const uint32_t gpio_port_rcc = ports_rcc.at(_pin.port);

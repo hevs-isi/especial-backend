@@ -4,7 +4,7 @@
 #include "gpio.h"
 
 Gpio::Gpio(uint8_t port, uint8_t pin) :
-		_pin(port, pin), _state(Invalid) {
+		_pin(port, pin) {
 }
 
 Gpio::~Gpio() {
