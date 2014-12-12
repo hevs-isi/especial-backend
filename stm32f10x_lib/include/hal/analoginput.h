@@ -6,31 +6,39 @@
 #include "gpio.h"
 #include <stdint.h>
 
-class AnalogInput {
+/**
+ * Configure a pin as analog input.
+ *
+ * Use the `ADC1` for the analog to digital conversion.
+ */
+class AnalogInput: public Gpio {
 public:
 
 	AnalogInput(uint8_t port, uint8_t pin, uint8_t channel);
 	virtual ~AnalogInput();
 
-	bool initialize();
+	/**
+	 * @brief Configure the pin as analog input.
+	 * @return `true` when configured
+	 */
+	virtual bool initialize();
 
-	// Current cached value
+	/**
+	 * @brief Current cached value
+	 */
 	inline bool get() const {
 		return _lastValue;
 	}
 
-	// Start a conversion to read the current analog value from the ADC
+	/**
+	 * @brief Start a conversion to read the current analog value from the ADC. Save the last value as cached value.
+	 */
 	uint16_t read();
 
 protected:
-
-	/** Pin of the GPIO */
-	Gpio::Pin _pin;
-
+	/* Analog input channel corresponding to the pin number. */
 	uint8_t _channel;
-	uint16_t _lastValue;
 
-	// Conversions from Pin to registers
-	const uint32_t gpio_port_rcc = Gpio::ports_rcc.at(_pin.port);
-	GPIO_TypeDef* gpio_port_base = Gpio::ports_base.at(_pin.port);
+	/* Last read value. */
+	uint16_t _lastValue;
 };

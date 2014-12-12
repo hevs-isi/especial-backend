@@ -4,7 +4,7 @@
 #pragma once
 
 /**
- * @brief Interface used by inputs that use interrupt (ISR).
+ * Interface used by GPIO that use interrupt (ISR).
  */
 class Interrupt {
 public:

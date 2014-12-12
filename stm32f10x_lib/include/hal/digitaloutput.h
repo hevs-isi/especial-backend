@@ -4,9 +4,15 @@
 #pragma once
 
 #include "gpio.h"
+#include "state.h"
 
 #include <stdint.h>
 
+/**
+ * Configure the pin as a digital output.
+ *
+ * Works with all pin and ports.
+ */
 class DigitalOutput: public Gpio {
 public:
 
@@ -15,6 +21,7 @@ public:
 
 	/**
 	 * @brief Configure the pin as output and set it to `OFF`.
+	 * @return `true` when configured
 	 */
 	virtual bool initialize();
 
@@ -45,4 +52,8 @@ public:
 	void toggle() {
 		setState(static_cast<State>(-state()));
 	}
+
+protected:
+	/** Current value of the GPIO */
+	State _state;
 };

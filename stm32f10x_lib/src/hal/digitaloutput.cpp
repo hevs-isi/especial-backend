@@ -5,14 +5,13 @@
 
 DigitalOutput::DigitalOutput(uint8_t port, uint8_t pin) :
 		Gpio(port, pin) {
+	_state = Invalid;
 }
 
 DigitalOutput::~DigitalOutput() {
 }
 
 bool DigitalOutput::initialize() {
-	assert(_pin.port >= 'A' && _pin.port <= 'G');
-
 	// Enable needed clocks
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO | gpio_port_rcc, ENABLE);
 
@@ -36,6 +35,6 @@ void DigitalOutput::setState(State state) {
 		GPIO_SetBits(gpio_port_base, _pin.pin); // set
 }
 
-Gpio::State DigitalOutput::state() const {
+State DigitalOutput::state() const {
 	return _state;
 }

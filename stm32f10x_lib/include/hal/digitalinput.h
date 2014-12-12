@@ -4,9 +4,17 @@
 #pragma once
 
 #include "gpio.h"
+#include "state.h"
 #include "interrupt.h"
 #include "controller/intcontroller.h"
 
+/**
+ * Configure the pin as a digital input.
+ *
+ * Works with all pin and ports. Use interruptions to read the pin value when it change.
+ * Use `get` to poll the input or `get` to read the current cached value.
+ * If interrupts are used, the cached value is updated automatically.
+ */
 class DigitalInput: public Gpio, public Interrupt {
 public:
 
@@ -37,8 +45,6 @@ public:
 		return state();
 	}
 
-
-
 	// Read the input GPIO value and update the cached state
 	inline operator bool() {
 		return read();
@@ -58,4 +64,9 @@ public:
 	}
 
 	virtual void irq();
+
+protected:
+
+	/** Current value of the GPIO */
+	State _state;
 };

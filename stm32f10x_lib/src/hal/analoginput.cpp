@@ -6,7 +6,8 @@
 #include "stm32f10x_adc.h"
 
 AnalogInput::AnalogInput(uint8_t port, uint8_t pin, uint8_t channel) :
-		_pin(port, pin), _channel(channel) {
+		Gpio(port, pin) {
+	_channel = channel;
 	_lastValue = 0;
 }
 
@@ -14,28 +15,20 @@ AnalogInput::~AnalogInput() {
 
 }
 
-/**
- * Initializes ADC15 used to measure the joystick button state (left, right, up, down).
- * ADC1 is used for the conversion.
- */
 bool AnalogInput::initialize() {
-	assert(_pin.port >= 'A' && _pin.port <= 'G');
-
 	GPIO_InitTypeDef gpioInitStructure;
 	ADC_InitTypeDef adcInitStructure;
 
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1 | gpio_port_rcc, ENABLE);
-	ADC_DeInit(ADC1);
 
-	// Set RC5 as analog input
-	gpioInitStructure.GPIO_Pin = _pin.pin; //GPIO_Pin_5;
+	/* Configure pin as output. */
+	gpioInitStructure.GPIO_Pin = _pin.pin;
 	gpioInitStructure.GPIO_Speed = GPIO_Speed_10MHz;
 	gpioInitStructure.GPIO_Mode = GPIO_Mode_AIN;
-	GPIO_Init(GPIOC, &gpioInitStructure);
+	GPIO_Init(gpio_port_base, &gpioInitStructure);
 
-	// ADC Structure Initialization
+	/* A/D initialization. */
 	ADC_StructInit(&adcInitStructure);
-	// Preinit
 	adcInitStructure.ADC_Mode = ADC_Mode_Independent;
 	adcInitStructure.ADC_ScanConvMode = DISABLE;
 	adcInitStructure.ADC_ContinuousConvMode = DISABLE;
@@ -57,9 +50,10 @@ uint16_t AnalogInput::read() {
 	ADC_SoftwareStartConvCmd(ADC1, ENABLE);
 
 	// Wait until conversion completion
-	while(ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET);
+	while (ADC_GetFlagStatus(ADC1, ADC_FLAG_EOC) == RESET)
+		;
 
 	// Get the conversion value and save it as cached value
-	_lastValue =  ADC_GetConversionValue(ADC1);
+	_lastValue = ADC_GetConversionValue(ADC1);
 	return _lastValue;
 }

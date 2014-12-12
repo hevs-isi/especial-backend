@@ -5,14 +5,13 @@
 
 DigitalInput::DigitalInput(uint8_t port, uint8_t pin) :
 		Gpio(port, pin) {
+	_state = Invalid;
 }
 
 DigitalInput::~DigitalInput() {
 }
 
 bool DigitalInput::initialize() {
-	assert(_pin.port >= 'A' && _pin.port <= 'G');
-
 	// Enable needed clocks
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO | gpio_port_rcc, ENABLE);
 
