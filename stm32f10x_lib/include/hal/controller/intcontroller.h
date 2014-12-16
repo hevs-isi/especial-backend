@@ -10,8 +10,6 @@
 #include <stdint.h>
 #include <map>
 
-using namespace std;
-
 class IntController {
 public:
 	IntController();

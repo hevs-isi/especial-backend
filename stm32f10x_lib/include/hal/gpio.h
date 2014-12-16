@@ -12,13 +12,12 @@
 #include <assert.h>
 #include <map>
 
-using namespace std;
-
 /**
  * Define a GPIO with a port and a pin number.
  * Base class used for many I/O.
  */
 class Gpio {
+
 public:
 	/**
 	 * @brief The GPIO port and pin used to initialize the GPIO.
@@ -54,6 +53,6 @@ protected:
 
 public:
 	//FIXME: optimize with an array ?
-	static const map<uint8_t, uint32_t> ports_rcc;
-	static const map<uint8_t, GPIO_TypeDef*> ports_base;
+	static const std::map<uint8_t, uint32_t> ports_rcc;
+	static const std::map<uint8_t, GPIO_TypeDef*> ports_base;
 };

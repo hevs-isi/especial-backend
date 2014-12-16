@@ -10,6 +10,8 @@ Gpio::Gpio(uint8_t port, uint8_t pin) :
 Gpio::~Gpio() {
 }
 
+using namespace std;
+
 const map<uint8_t, uint32_t> Gpio::ports_rcc = {
 	{ 'A', RCC_APB2Periph_GPIOA },
 	{ 'B', RCC_APB2Periph_GPIOB },
