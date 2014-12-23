@@ -3,11 +3,10 @@
  * \brief	simple active delays
  * \author	marc dot pignat at hevs dot ch
  *
- * Code adapted for the STM32F103-STK board.
+ * Code updated for the STM32F103-STK board.
  * Delays with busy loops (active waiting, no timer).
  ***************************************************************************/
-#ifndef HEIVS_DELAY_H
-#define HEIVS_DELAY_H
+#pragma once
 
 #ifdef __cplusplus
 	extern "C" {
@@ -32,5 +31,3 @@ void delay_wait_us(uint32_t us);
 #ifdef __cplusplus
 	}
 #endif
-
-#endif /* HEIVS_DELAY_H */
