@@ -39,17 +39,6 @@ bool PwmOutput::initialize() {
 	TIM_TimeBase_InitStructure.TIM_Prescaler = 1;
 	TIM_TimeBaseInit(TIM4, &TIM_TimeBase_InitStructure);
 
-	setPeriod(0); // Set to `OFF`.
-	TIM_Cmd(TIM4, ENABLE);
-
-	return true;
-}
-
-void PwmOutput::setPeriod(uint16_t period) const {
-
-	if (period > 0xFFF)
-		period = 0xFFF;
-
 	/* Configure PWM channel output. */
 	TIM_OCInitTypeDef TIM_OC_InitStructure;
 	TIM_OC_InitStructure.TIM_OCMode = TIM_OCMode_PWM1;
@@ -59,13 +48,30 @@ void PwmOutput::setPeriod(uint16_t period) const {
 	TIM_OC_InitStructure.TIM_OCNPolarity = TIM_OCNPolarity_High;
 	TIM_OC_InitStructure.TIM_OutputState = TIM_OutputState_Enable;
 	TIM_OC_InitStructure.TIM_OutputNState = TIM_OutputNState_Disable;
-	TIM_OC_InitStructure.TIM_Pulse = period;
+	TIM_OC_InitStructure.TIM_Pulse = 0x00; // Default is OFF
 
 	// Enable the PWM channel of the timer 4
 	if (_pin.pinNumber == 8)
 		TIM_OC3Init(TIM4, &TIM_OC_InitStructure); // Timer4, channel 3
 	else if (_pin.pinNumber == 9)
 		TIM_OC4Init(TIM4, &TIM_OC_InitStructure); // Timer4, channel 4
+	else
+		assert(false);
+
+	TIM_Cmd(TIM4, ENABLE);
+	return true;
+}
+
+void PwmOutput::setPeriod(uint16_t period) const {
+
+	if (period > 0xFFF)
+		period = 0xFFF;
+
+	// Change the period for each PWM channels
+	if (_pin.pinNumber == 8)
+		TIM4->CCR3 = period; // Timer4, channel 3
+	else if (_pin.pinNumber == 9)
+		TIM4->CCR4 = period; // Timer4, channel 4
 	else
 		assert(false);
 }
