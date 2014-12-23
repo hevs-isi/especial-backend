@@ -31,18 +31,24 @@ bool PwmOutput::initialize() {
 	TIM_TimeBaseInitTypeDef TIM_TimeBase_InitStructure;
 	TIM_TimeBase_InitStructure.TIM_ClockDivision = TIM_CKD_DIV1;
 	TIM_TimeBase_InitStructure.TIM_CounterMode = TIM_CounterMode_Up;
-	TIM_TimeBase_InitStructure.TIM_Period = 4096;
-	TIM_TimeBase_InitStructure.TIM_Prescaler = 71;
+	TIM_TimeBase_InitStructure.TIM_Period = 0xFFF; // 4096 - 1;
+
+	// pre = 71 => 244 Hz
+	// pre = 02 => 5,87 kHz
+	// pre = 01 => 8.77 kHz
+	TIM_TimeBase_InitStructure.TIM_Prescaler = 1;
 	TIM_TimeBaseInit(TIM4, &TIM_TimeBase_InitStructure);
 
 	setPeriod(0); // Set to `OFF`.
+	TIM_Cmd(TIM4, ENABLE);
+
 	return true;
 }
 
 void PwmOutput::setPeriod(uint16_t period) const {
 
-	if (period > 4096)
-		period = 4096;
+	if (period > 0xFFF)
+		period = 0xFFF;
 
 	/* Configure PWM channel output. */
 	TIM_OCInitTypeDef TIM_OC_InitStructure;
@@ -62,7 +68,5 @@ void PwmOutput::setPeriod(uint16_t period) const {
 		TIM_OC4Init(TIM4, &TIM_OC_InitStructure); // Timer4, channel 4
 	else
 		assert(false);
-
-	TIM_Cmd(TIM4, ENABLE);
 }
 
