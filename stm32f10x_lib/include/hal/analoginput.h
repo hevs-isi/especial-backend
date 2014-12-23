@@ -9,7 +9,7 @@
 /**
  * Configure a pin as analog input.
  *
- * Use the `ADC1` for the analog to digital conversion.
+ * Use the `ADC1` for the analog to digital conversion (12 bit conversion).
  */
 class AnalogInput: public Gpio {
 public:
@@ -19,6 +19,9 @@ public:
 
 	/**
 	 * @brief Configure the pin as analog input.
+	 *
+	 * Configure the A/D module to do a 12 bit conversion on the specified channel.
+	 *
 	 * @return `true` when configured
 	 */
 	virtual bool initialize();
@@ -31,9 +34,15 @@ public:
 	}
 
 	/**
-	 * @brief Start a conversion to read the current analog value from the ADC. Save the last value as cached value.
+	 * @brief Start a conversion to read the current analog value from the ADC.
+	 * Save the last value A/D value is saved as cached value.
+	 *
+	 * @return the result of the A/D conversion (12 bit)
 	 */
 	uint16_t read();
+
+private:
+	void adInit();
 
 protected:
 	/* Analog input channel corresponding to the pin number. */
