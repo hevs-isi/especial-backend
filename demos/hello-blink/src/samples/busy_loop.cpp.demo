@@ -1,0 +1,40 @@
+#include "digitaloutput.h"
+
+#include "utils/time.h"
+
+DigitalOutput led2('C', 4);
+DigitalOutput led1('C', 3);
+
+/**
+ * Use the timer2 to blink led1 and led2 at different rates.
+ * Custom time functions are used (no active busy loops).
+ */
+int main() {
+	time_init();
+
+	led1.initialize();
+	led2.initialize();
+
+	led1 = true;
+	led2 = true;
+
+	// Set the timeout
+	const uint32_t ms1 = 1000, ms2 = 1000 / 4;
+	timeout_t timeout1 = time_set_timeout_ms(ms1);
+	timeout_t timeout2 = time_set_timeout_ms(ms2);
+
+	while (1) {
+		// Timeout elapsed ?
+		if (time_elapsed(timeout1)) {
+			led1.toggle(); // 1000s
+			timeout1 = time_set_timeout_ms(ms1);
+		}
+
+		if (time_elapsed(timeout2)) {
+			led2.toggle(); // 250ms
+			timeout2 = time_set_timeout_ms(ms2);
+		}
+	}
+
+	return 0;
+}

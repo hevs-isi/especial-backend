@@ -1,0 +1,15 @@
+#include "digitaloutput.h"
+
+#include "utils/delay.h"
+
+DigitalOutput led1('C', 3);
+
+int main() {
+	led1.initialize();
+
+	while (1) {
+		// Toggle led1 at 0.5 Hz (1.0s ON, 1.0s OFF)
+		led1.toggle();
+		delay_wait_ms(1000);
+	}
+}
