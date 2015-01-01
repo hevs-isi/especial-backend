@@ -1,0 +1,38 @@
+#include "analoginput.h"
+#include "pwmoutput.h"
+
+#include "utils/time.h"
+#include "utils/delay.h"
+#include "demo/pid.h"
+
+AnalogInput cons('B', 0, 8); // Setpoint value (on PB0, CH9)
+AnalogInput mes('B', 1, 9); // Feedback measure (on PB1, CH9)
+PwmOutput pwm3('B', 9); // PWM output (led4)
+
+void init() {
+	pwm3.initialize();
+	mes.initialize();
+	cons.initialize();
+}
+
+int main() {
+	pid_t pid;
+
+	init();
+
+	time_init();
+	pid_init(&pid, 2, 10, 0, 0, 4095);
+
+	while (1) {
+		// Read the feedback measure and the setpoint value from the potentiometer (0..4095)
+		uint16_t measure = mes.read();
+		uint16_t setpoint = cons.read();
+
+		pid.state.setpoint = setpoint;
+
+		double res = pid_step(&pid, measure);
+		pwm3.setPeriod(res); // Set the PWM period (4095 is 100% duty)
+
+		delay_wait_ms(2);
+	}
+}
