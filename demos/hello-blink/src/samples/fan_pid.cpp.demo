@@ -1,0 +1,51 @@
+#include "analoginput.h"
+#include "pulseinput.h"
+#include "pwmoutput.h"
+
+#include "utils/delay.h"
+#include "demo/pid.h"
+
+AnalogInput pot('B', 0, 8);	// Potentiometer reference value (PID setpoint)
+PulseInput fan('B', 9);		// Fan pulse counter input
+PwmOutput pwm('B', 8);		// Fan PWM control output
+
+void init() {
+	pot.initialize();
+	fan.initialize();
+	pwm.initialize();
+}
+
+/**
+ * Test application for the fan demonstration.
+ *
+ * The potentiometer is used set the speed of the fan. The fan speed is measured using a pulse signal.
+ * A PID regulator update the fan speed using a PWM control pin, according to the desired setpoint.
+ */
+int main() {
+	pid_t pid;
+	uint32_t speed = 0; // Fan speed measure using the pulse input signal
+
+	init();
+
+	// Limited output from 7% to 100 % PWM duty cycle
+	pid_init(&pid, 1, 1, 0, 255, 4095);
+
+	while (1) {
+		// 1) Read inputs
+		uint16_t setpoint = pot.read(); // A/D conversion (from 0 to 4096)
+		speed = fan.get(); // Pulse counter
+
+		// 2) Loop logic
+		pid.state.setpoint = setpoint;
+		int32_t mes = 4096 - ((speed - 110) * 25); // Speed gain
+		if (mes <= 0)
+			mes = 0;
+
+		double res = pid_step(&pid, mes);
+
+		// 3) Update outputs
+		pwm.setPeriod(res); // Potentiometer setpoint value to PWM3 and LED3
+
+		delay_wait_ms(2);
+	}
+}
