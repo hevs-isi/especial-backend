@@ -59,17 +59,18 @@ typedef struct P103EmulState {
 	QemuCond cmd_cond;
 	int cmd_sock; // TCP socket
 
-	/* Receive events inside QEMU (from the monitor / GUI) */
+	/* Receive events inside QEMU (from the monitor - Scala side) */
     int evt_sock; // TCP socket
     QSIMPLEQ_HEAD(event_list, P103Cmd) evt_list; // queue of events
     QemuThread evt_thread_id;
     QemuMutex evt_mutex;
     QemuCond evt_ack_cond; // signal when the event has been confirmed
+    int last_evt_id; // Store the last event ID received from the Scala side
 
 } P103EmulState;
 
-// State wit attributes
-static P103EmulState p103_state;
+static P103EmulState p103_state; // State wit attributes
+static Stm32P103* state; // STM32p103 STK state
 
 /* Private function */
 
@@ -93,7 +94,6 @@ inline void post_event_c(uint8_t eventId) {
 	// Pin and port are not used
 	stm32p103_emul_event_post(C_EVENT, 0, 0, (uint32_t)(eventId));
 }
-
 
 void event_wait_ack(void) {
 	qemu_mutex_lock(&p103_state.evt_mutex);
@@ -262,11 +262,16 @@ static void *stm32p103_emul_evt_handle(void *arg) {
 		}
 		else {
 			DBG("_emul: Read [3]='%c', [2]='%c', [1]='%c', [0]='%c'\n", data.byte[3], data.byte[2], data.byte[1], data.byte[0]);
-			DBG("_emul: Data=0x%x\n", (int)data.nbr);
+
+			// Store the last event ID
+			state->last_evt_id = (int)data.nbr;
+			DBG("_emul: Data=0x%x\n", state->last_evt_id);
 
 			// TODO: use JSON or check the value of the message here...
+			// TODO: read digital in message
+			dddd
 
-			// Event confirmed from the Monitor server
+			// Event confirmed from the Monitor server. Run the code until the next event.
 			qemu_mutex_lock(&p103_state.evt_mutex);
 			qemu_cond_signal(&p103_state.evt_ack_cond);
 			qemu_mutex_unlock(&p103_state.evt_mutex);
@@ -275,10 +280,11 @@ static void *stm32p103_emul_evt_handle(void *arg) {
 	return NULL;
 }
 
-int stm32p103_emul_init(void) {
+int stm32p103_emul_init(Stm32P103* s) {
 	DBG("_emul: %s\n", __FUNCTION__);
 
 	// State initialization
+	state = s;
 
 	// TCP write
 	QSIMPLEQ_INIT(&p103_state.cmd_list);

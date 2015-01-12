@@ -14,9 +14,17 @@
 #ifndef STM32_P103_EMUL_H_
 #define STM32_P103_EMUL_H_
 
+#include "hw/arm/stm32.h"
+
 typedef enum {
-	DIGITAL_OUT	= 0x00,	//!< Value written to a digital output
-	C_EVENT 	= 0x10,	//!< Event sent from the C code
+	// To the Scala side
+	DIGITAL_OUT	= 0x00,	//!< -> New digital output value. Event sent to the Scala side.
+	C_EVENT 	= 0x10,	//!< -> Event sent from the C code to the Scala side.
+
+	// TODO: use this event to read input values from Scala monitor
+	fff
+	// From the Scala side
+	DIGITAL_IN	= 0x20, //!> <- Event received from the Scala side to set digital (boolean) input value.
 } EventId;
 
 // Value written by the monitor to ack an event
@@ -41,7 +49,7 @@ inline void post_event_c(uint8_t eventId);
 void event_wait_ack(void);
 
 
-int stm32p103_emul_init(void);
+int stm32p103_emul_init(Stm32P103* state);
 
 int stm32p103_emul_exit(void);
 

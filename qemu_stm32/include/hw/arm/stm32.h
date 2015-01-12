@@ -284,6 +284,14 @@ void stm32_uart_connect(Stm32Uart *s, CharDriverState *chr,
 /* STM32 MICROCONTROLLER - GENERAL */
 typedef struct Stm32 Stm32;
 
+typedef struct {
+	Stm32 *stm32;
+
+	// Button external interrupts
+	qemu_irq btn0_irq, btn1_irq, btn2_irq, btn3_irq;
+
+} Stm32P103;
+
 /* Initialize the STM32 microcontroller.  Returns arrays
  * of GPIOs and UARTs so that connections can be made. */
 void stm32_init(
