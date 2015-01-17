@@ -65,12 +65,11 @@ typedef struct P103EmulState {
     QemuThread evt_thread_id;
     QemuMutex evt_mutex;
     QemuCond evt_ack_cond; // signal when the event has been confirmed
-    int last_evt_id; // Store the last event ID received from the Scala side
 
 } P103EmulState;
 
 static P103EmulState p103_state; // State wit attributes
-static Stm32P103* state; // STM32p103 STK state
+static Stm32P103* stm_state; // STM32p103 STK state
 
 /* Private function */
 
@@ -95,6 +94,8 @@ inline void post_event_c(uint8_t eventId) {
 	stm32p103_emul_event_post(C_EVENT, 0, 0, (uint32_t)(eventId));
 }
 
+
+// The USART5 wait until the QEMU event has bee acked by the Scala code
 void event_wait_ack(void) {
 	qemu_mutex_lock(&p103_state.evt_mutex);
 	qemu_cond_wait(&p103_state.evt_ack_cond, &p103_state.evt_mutex);
@@ -260,21 +261,83 @@ static void *stm32p103_emul_evt_handle(void *arg) {
 		else if(n != 4) {
 			DBG("_emul: Read %d. End !\n", (int)n);
 		}
+
+		// 4 bytes received from the Scala side
 		else {
-			DBG("_emul: Read [3]='%c', [2]='%c', [1]='%c', [0]='%c'\n", data.byte[3], data.byte[2], data.byte[1], data.byte[0]);
 
-			// Store the last event ID
-			state->last_evt_id = (int)data.nbr;
-			DBG("_emul: Data=0x%x\n", state->last_evt_id);
+			const uint8_t id = data.byte[3];
 
-			// TODO: use JSON or check the value of the message here...
-			// TODO: read digital in message
-			dddd
+			// Set digital input pin value
+			if(id == SCALA_DIGITAL_IN) {
+				const uint8_t btId = data.byte[1];
+				qemu_irq btIrq = NULL;
 
-			// Event confirmed from the Monitor server. Run the code until the next event.
-			qemu_mutex_lock(&p103_state.evt_mutex);
-			qemu_cond_signal(&p103_state.evt_ack_cond);
-			qemu_mutex_unlock(&p103_state.evt_mutex);
+				// Only the 4 input buttons are supported
+				switch(btId) {
+				case 0:
+					btIrq = stm_state->btn0_irq;
+					break;
+				case 1:
+					btIrq = stm_state->btn1_irq;
+					break;
+				case 2:
+					btIrq = stm_state->btn2_irq;
+					break;
+				case 3:
+					btIrq = stm_state->btn3_irq;
+					break;
+				default:
+					// ERR
+					break;
+				}
+
+				// Update the input value if the pin number is valid
+				if(btIrq != NULL) {
+					const uint8_t btValue = data.byte[0];
+					if(btValue == 0) {
+						// qemu_irq_raise(btIrq);
+						DBG("_emul: LOWER *********\n")
+						//qemu_set_irq(btIrq, 0);
+						//qemu_irq_lower(btIrq);
+
+						//qemu_set_irq(stm_state->btn2_irq, 1);
+						//qemu_set_irq(stm_state->btn2_irq, 0);
+					}
+					else {
+						// qemu_irq_lower(btIrq);
+						DBG("_emul: RAISE *********\n")
+						//qemu_set_irq(btIrq, 1);
+						//qemu_irq_raise(btIrq);
+
+						//qemu_set_irq(stm_state->btn2_irq, 0);
+						//qemu_set_irq(stm_state->btn2_irq, 1);
+					}
+
+					DBG("_emul: BT [3]=%d, [2]=%d, [1]=%d, [0]=%d\n", data.byte[3], data.byte[2], data.byte[1], data.byte[0]);
+
+					DBG("_emul: Button number %d set to '%d'\n", btId, btValue)
+				}
+			}
+
+			// QEMU logger event ack from the Scala side. Continue the execution of the QEMU code.
+			else if(id == SCALA_ACK_EVT) {
+				// Event confirmed from the Monitor server. Run the code until the next event.
+
+				/*qemu_set_irq(stm_state->btn2_irq, toggle);
+				if(toggle == 0) {
+					DBG("UP ------------")
+					toggle = 1;
+				}
+				else {
+					DBG("DOWN ------------")
+					toggle = 0;
+				}*/
+
+				DBG("_emul: ACK event received.\n");
+				qemu_mutex_lock(&p103_state.evt_mutex);
+				qemu_cond_signal(&p103_state.evt_ack_cond);
+				qemu_mutex_unlock(&p103_state.evt_mutex);
+			}
 		}
 	}
 	return NULL;
@@ -284,7 +347,7 @@ int stm32p103_emul_init(Stm32P103* s) {
 	DBG("_emul: %s\n", __FUNCTION__);
 
 	// State initialization
-	state = s;
+	stm_state = s;
 
 	// TCP write
 	QSIMPLEQ_INIT(&p103_state.cmd_list);

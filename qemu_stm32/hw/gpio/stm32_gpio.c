@@ -322,7 +322,7 @@ static const MemoryRegionOps stm32_gpio_ops = {
 
 static void stm32_gpio_reset(DeviceState *dev)
 {
-    // int pin;
+    int pin;
     Stm32Gpio *s = STM32_GPIO(dev);
 
     s->GPIOx_CRy[0] = 0x44444444;
@@ -333,9 +333,9 @@ static void stm32_gpio_reset(DeviceState *dev)
     // Do not set outputs to `0` on reset.
     // This is done by the HAL C++ code
 
-    // for(pin = 0; pin < STM32_GPIO_PIN_COUNT; pin++) {
-    //    qemu_irq_lower(s->out_irq[pin]);
-    // }
+     for(pin = 0; pin < STM32_GPIO_PIN_COUNT; pin++) {
+        qemu_irq_lower(s->out_irq[pin]);
+     }
 
     /* Leave input state as it is - only outputs and config are affected
      * by the GPIO reset. */

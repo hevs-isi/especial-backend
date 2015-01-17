@@ -21,10 +21,9 @@ typedef enum {
 	DIGITAL_OUT	= 0x00,	//!< -> New digital output value. Event sent to the Scala side.
 	C_EVENT 	= 0x10,	//!< -> Event sent from the C code to the Scala side.
 
-	// TODO: use this event to read input values from Scala monitor
-	fff
 	// From the Scala side
-	DIGITAL_IN	= 0x20, //!> <- Event received from the Scala side to set digital (boolean) input value.
+	SCALA_DIGITAL_IN = 'V',	//!> <- Event received from the Scala side to set digital (boolean) input value.
+	SCALA_ACK_EVT = 'A',	//!> <- Event received from the Scala side to ack an event.
 } EventId;
 
 // Value written by the monitor to ack an event
