@@ -287,7 +287,7 @@ typedef struct Stm32 Stm32;
 typedef struct {
 	Stm32 *stm32;
 
-	// Button external interrupts
+	// External interrupts lines for the main and extension board buttons.
 	qemu_irq btn0_irq, btn1_irq, btn2_irq, btn3_irq;
 
 } Stm32P103;

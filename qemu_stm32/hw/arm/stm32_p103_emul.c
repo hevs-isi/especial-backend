@@ -1,6 +1,12 @@
 /*
- * REPTAR Spartan6 FPGA emulation
- * Emulation "logic" part. Gateway between the emulation code and the backend.
+ * Control the execution of the MCU code running in QEMU over TCP/IP.
+ *
+ * Events are sent to monitor the code execution (see QemuLogger).
+ * Commands can be sent from the Scala side to set input values (EXT lines only).
+ * When an output value change, its value is sent to the Scala side automatically.
+ *
+ * STM32 P103 Olimex board emulation.
+ * Code adapted from the "REPTAR Spartan6 FPGA emulation".
  *
  * Copyright (c) 2013 HEIG-VD / REDS
  * Written by Romain Bornet
@@ -265,6 +271,7 @@ static void *stm32p103_emul_evt_handle(void *arg) {
 		// 4 bytes received from the Scala side
 		else {
 
+			// ID of the command. Ack QEMU logger event or set an input value.
 			const uint8_t id = data.byte[3];
 
 			// Set digital input pin value
@@ -272,7 +279,7 @@ static void *stm32p103_emul_evt_handle(void *arg) {
 				const uint8_t btId = data.byte[1];
 				qemu_irq btIrq = NULL;
 
-				// Only the 4 input buttons are supported
+				// Only the 4 input buttons are available.
 				switch(btId) {
 				case 0:
 					btIrq = stm_state->btn0_irq;
@@ -287,56 +294,35 @@ static void *stm32p103_emul_evt_handle(void *arg) {
 					btIrq = stm_state->btn3_irq;
 					break;
 				default:
-					// ERR
+					// Error. Unknown input pin.
 					break;
 				}
 
 				// Update the input value if the pin number is valid
 				if(btIrq != NULL) {
-					const uint8_t btValue = data.byte[0];
-					if(btValue == 0) {
-						// qemu_irq_raise(btIrq);
-						DBG("_emul: LOWER *********\n")
-						//qemu_set_irq(btIrq, 0);
-						//qemu_irq_lower(btIrq);
+					// Read and check the input value
+					uint8_t btValue = data.byte[0];
+					if(btValue != 0) btValue = 1;
 
-						//qemu_set_irq(stm_state->btn2_irq, 1);
-						//qemu_set_irq(stm_state->btn2_irq, 0);
-					}
-					else {
-						// qemu_irq_lower(btIrq);
-						DBG("_emul: RAISE *********\n")
-						//qemu_set_irq(btIrq, 1);
-						//qemu_irq_raise(btIrq);
-
-						//qemu_set_irq(stm_state->btn2_irq, 0);
-						//qemu_set_irq(stm_state->btn2_irq, 1);
-					}
-
-					DBG("_emul: BT [3]=%d, [2]=%d, [1]=%d, [0]=%d\n", data.byte[3], data.byte[2], data.byte[1], data.byte[0]);
-
+					// Change the EXT IRQ line of the button to simulate when the button is pressed or released.
 					DBG("_emul: Button number %d set to '%d'\n", btId, btValue)
+					qemu_set_irq(btIrq, btValue);
 				}
 			}
 
+
 			// QEMU logger event ack from the Scala side. Continue the execution of the QEMU code.
 			else if(id == SCALA_ACK_EVT) {
-				// Event confirmed from the Monitor server. Run the code until the next event.
-
-				/*qemu_set_irq(stm_state->btn2_irq, toggle);
-				if(toggle == 0) {
-					DBG("UP ------------")
-					toggle = 1;
-				}
-				else {
-					DBG("DOWN ------------")
-					toggle = 0;
-				}*/
-
 				DBG("_emul: ACK event received.\n");
 				qemu_mutex_lock(&p103_state.evt_mutex);
-				qemu_cond_signal(&p103_state.evt_ack_cond);
+				qemu_cond_signal(&p103_state.evt_ack_cond);	// Event confirmed. Unlock the MCU code.
 				qemu_mutex_unlock(&p103_state.evt_mutex);
+			}
+
+
+			// Unknown command
+			else {
+				DBG("_emul: Unknown: [3]=%d, [2]=%d, [1]=%d, [0]=%d\n", data.byte[3], data.byte[2], data.byte[1], data.byte[0]);
 			}
 		}
 	}

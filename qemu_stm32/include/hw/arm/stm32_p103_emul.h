@@ -1,15 +1,18 @@
 /*
- * REPTAR Spartan6 FPGA emulation
- * Emulation "logic" part. Gateway between the emulation code and the backend.
+ * Control the execution of the MCU code running in QEMU over TCP/IP.
+ *
+ * Events are sent to monitor the code execution (see QemuLogger).
+ * Commands can be sent from the Scala side to set input values (EXT lines only).
+ * When an output value change, its value is sent to the Scala side automatically.
+ *
+ * STM32 P103 Olimex board emulation.
+ * Code adapted from the "REPTAR Spartan6 FPGA emulation".
  *
  * Copyright (c) 2013 HEIG-VD / REDS
  * Written by Romain Bornet
  *
  * This code is licensed under the GPL.
  */
-
-// christopher.metrailler@hevs.ch - 2014/10/24
-// STM32 P103 Olimex board emulation
 
 #ifndef STM32_P103_EMUL_H_
 #define STM32_P103_EMUL_H_

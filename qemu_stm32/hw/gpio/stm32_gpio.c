@@ -83,6 +83,7 @@ static void stm32_gpio_in_trigger(void *opaque, int irq, int level)
     assert(pin < STM32_GPIO_PIN_COUNT);
 
     /* Update internal pin state. */
+    s->in &= ~(1 << pin);
     s->in |= (level ? 1 : 0) << pin;
 
     /* Propagate the trigger to the input IRQs. */
@@ -125,6 +126,7 @@ static void stm32_gpio_update_dir(Stm32Gpio *s, int cr_index)
         /* If the mode is 0, the pin is input.  Otherwise, it
          * is output.
          */
+        s->dir_mask &= ~(1 << pin);
         s->dir_mask |= (pin_dir ? 1 : 0) << pin;
     }
 }
@@ -149,15 +151,17 @@ static void stm32_gpio_GPIOx_ODR_write(Stm32Gpio *s, uint32_t new_value)
     changed = old_value ^ new_value;
 
     /* Get changed pins that are outputs - we will not touch input pins */
-    changed_out = changed & s->dir_mask; // mask output = 1
+    changed_out = changed & s->dir_mask;
 
+    // ***************************
+    // Original behavior modified.
+    // Set all output IRQ, event if the output has the same value.
+    // This is necessary to send all output values to the Scala side and then to generate the VCD file.
+    // ***************************
     if (changed_out) {
         for (pin = 0; pin < STM32_GPIO_PIN_COUNT; pin++) {
-            /* If the value of this pin has changed, then update
-             * the output IRQ.
-             */
+            // If the value of this pin has changed, then update the output IRQ.
             if (changed_out & BIT(pin)) {
-            	DBG("Pin is: %d\n", pin);
                 qemu_set_irq(
                         /* The "irq_intercept_out" command in the qtest
                            framework overwrites the out IRQ array in the
@@ -173,6 +177,38 @@ static void stm32_gpio_GPIOx_ODR_write(Stm32Gpio *s, uint32_t new_value)
         }
     }
 }
+
+static uint64_t stm32_gpio_read(void *opaque, hwaddr offset, unsigned size)
+{
+    Stm32Gpio *s = (Stm32Gpio *)opaque;
+
+    assert(size == 4);
+
+    switch (offset) {
+        case GPIOx_CRL_OFFSET:
+            return s->GPIOx_CRy[0];
+        case GPIOx_CRH_OFFSET:
+            return s->GPIOx_CRy[1];
+        case GPIOx_IDR_OFFSET:
+            return s->in;
+        case GPIOx_ODR_OFFSET:
+            return s->GPIOx_ODR;
+        case GPIOx_BSRR_OFFSET:
+            STM32_WARN_WO_REG(offset);
+            return 0;
+        case GPIOx_BRR_OFFSET:
+            STM32_WARN_WO_REG(offset);
+            return 0;
+        case GPIOx_LCKR_OFFSET:
+            /* Locking is not yet implemented */
+            return 0;
+        default:
+            STM32_BAD_REG(offset, size);
+            return 0;
+    }
+}
+
+/* UPDATE */
 
 /**
  * Trigger an IRQ when a value is written to an output.
@@ -211,40 +247,7 @@ static void stm32_gpio_trigger_irq(Stm32Gpio *s, uint32_t new_value, uint16_t pi
 	}
 }
 
-static uint64_t stm32_gpio_read(void *opaque, hwaddr offset,
-                          unsigned size)
-{
-    Stm32Gpio *s = (Stm32Gpio *)opaque;
-
-    assert(size == 4);
-
-    switch (offset) {
-        case GPIOx_CRL_OFFSET:
-            return s->GPIOx_CRy[0];
-        case GPIOx_CRH_OFFSET:
-            return s->GPIOx_CRy[1];
-        case GPIOx_IDR_OFFSET:
-            return s->in;
-        case GPIOx_ODR_OFFSET:
-            return s->GPIOx_ODR;
-        case GPIOx_BSRR_OFFSET:
-            STM32_WARN_WO_REG(offset);
-            return 0;
-        case GPIOx_BRR_OFFSET:
-            STM32_WARN_WO_REG(offset);
-            return 0;
-        case GPIOx_LCKR_OFFSET:
-            /* Locking is not yet implemented */
-            return 0;
-        default:
-            STM32_BAD_REG(offset, size);
-            return 0;
-	}
-}
-
-static void stm32_gpio_write(void *opaque, hwaddr offset,
-                       uint64_t value, unsigned size)
-{
+static void stm32_gpio_write(void *opaque, hwaddr offset, uint64_t value, unsigned size) {
     uint32_t set_mask, reset_mask;
     uint16_t pin_nbr;
     Stm32Gpio *s = (Stm32Gpio *)opaque;
@@ -272,13 +275,8 @@ static void stm32_gpio_write(void *opaque, hwaddr offset,
         	DBG("Write 1: 0x%x\n", (uint16_t)value);
         	stm32_gpio_GPIOx_ODR_write(s, value);
             break;
-
-        /**
-         * A bit set correspond to set the output to Off with `led.set(false);`.
-         * Value `0x1000` corresponds to output pin number 12.
-         */
         case GPIOx_BSRR_OFFSET:
-        	/* Setting a bit sets or resets the corresponding bit in the output
+            /* Setting a bit sets or resets the corresponding bit in the output
              * register.  The lower 16 bits perform resets, and the upper 16
              * bits perform sets.  Register is write-only and so does not need
              * to store a value.  Sets take priority over resets, so we do
@@ -286,14 +284,9 @@ static void stm32_gpio_write(void *opaque, hwaddr offset,
              */
             set_mask = value & 0x0000ffff;
             reset_mask = ~(value >> 16) & 0x0000ffff;
-            // stm32_gpio_GPIOx_ODR_write(s, (s->GPIOx_ODR & reset_mask) | set_mask);
+            //stm32_gpio_GPIOx_ODR_write(s, (s->GPIOx_ODR & reset_mask) | set_mask);
             stm32_gpio_trigger_irq(s, (s->GPIOx_ODR & reset_mask) | set_mask, pin_nbr);
             break;
-
-        /**
-         * A bit reset correspond to set the output to On with `led.set(true);`.
-         * Value `0x1000` corresponds to output pin number 12.
-         */
         case GPIOx_BRR_OFFSET:
             /* Setting a bit resets the corresponding bit in the output
              * register.  Register is write-only and so does not need to store
@@ -330,18 +323,13 @@ static void stm32_gpio_reset(DeviceState *dev)
     s->GPIOx_ODR = 0;
     s->dir_mask = 0; /* input = 0, output = 1 */
 
-    // Do not set outputs to `0` on reset.
-    // This is done by the HAL C++ code
-
-     for(pin = 0; pin < STM32_GPIO_PIN_COUNT; pin++) {
+    for(pin = 0; pin < STM32_GPIO_PIN_COUNT; pin++) {
         qemu_irq_lower(s->out_irq[pin]);
-     }
+    }
 
     /* Leave input state as it is - only outputs and config are affected
      * by the GPIO reset. */
 }
-
-
 
 
 
@@ -355,9 +343,6 @@ uint8_t stm32_gpio_get_config_bits(Stm32Gpio *s, unsigned pin) {
 uint8_t stm32_gpio_get_mode_bits(Stm32Gpio *s, unsigned pin) {
     return stm32_gpio_get_pin_config(s, pin) & 0x3;
 }
-
-
-
 
 
 

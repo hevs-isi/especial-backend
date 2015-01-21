@@ -36,8 +36,6 @@
 // Emulation add-on. Add TCP clients to monitor events and GPIOs.
 #include "hw/arm/stm32_p103_emul.h"
 
-static int toggle = 1;
-
 /**
  * Called when a new value is written to a GPIO (digital output).
  *
@@ -47,44 +45,52 @@ static int toggle = 1;
  * IRQ are registered in the `stm32_p103_init` function.
  */
 static void output_write_handler(void *opaque, int n, int level) {
-
-	Stm32P103 *s = opaque;
-
-	DBG("**** IRQ %d is %d *****\n", n, level);
-	//return;
-
 	// Map the IRQ number with digital outputs pins
 	switch (n) {
 	case 0:
-		//post_event_digital_out('C', 12, level);	// LED0 - LED on `PC.12`
-
-		DBG("**** set IRQ 0 to %d *****\n", toggle);
-
-		qemu_set_irq(s->btn2_irq, toggle);
-		if(toggle == 0)
-			toggle = 1;
-		else
-			toggle = 0;
-
+		post_event_digital_out('C', 12, level);	// LED0 - LED on `PC.12`
 		break;
 	case 1:
-		//post_event_digital_out('C', 3, level);	// LED1 - Yellow LED on `PC.3`
+		post_event_digital_out('C', 3, level);	// LED1 - Yellow LED on `PC.3`
 		break;
 	case 2:
-		//post_event_digital_out('C', 4, level);	// LED2 - Yellow LED on `PC.4`
+		post_event_digital_out('C', 4, level);	// LED2 - Yellow LED on `PC.4`
 		break;
 	case 3:
-		//post_event_digital_out('B', 8, level);	// LED3 - Red LED on `PB.8`
+		post_event_digital_out('B', 8, level);	// LED3 - Red LED on `PB.8`
 		break;
 	case 4:
-		//post_event_digital_out('B', 9, level);	// LED4 - Red LED on `PB.9`
+		post_event_digital_out('B', 9, level);	// LED4 - Red LED on `PB.9`
 		break;
-
 	default:
 		// Unknown GPIO number or not registered.
 		break;
 	}
 }
+
+/*
+ * Example on how to use the QEMU monitor to send command from a terminal.
+ * Inside the monitor, you can use the "sendkey" command.
+ */
+//	static void stm32_p103_key_event(void *opaque, int keycode) {
+//		Stm32P103 *s = (Stm32P103 *) opaque;
+//		bool make;
+//		int core_keycode;
+//
+//		if ((keycode & 0x80) == 0) {
+//			make = true;
+//			core_keycode = keycode;
+//		} else {
+//			make = false;
+//			core_keycode = keycode & 0x7f;
+//		}
+//
+//		if (core_keycode == 0x30) {
+//			// Responds when a "B" key press is received.
+//			// Inside the monitor, you can type "sendkey b"
+//		}
+//		return;
+//	}
 
 
 static void stm32_p103_init(MachineState *machine) {
@@ -106,11 +112,11 @@ static void stm32_p103_init(MachineState *machine) {
 	assert(gpio_c);
 	assert(uart2);
 
-	/*
-	 * Outputs IRQs for all digital outputs.
-	 * Write callback is `output_write_handler`.
-	 */
-	outputs_irq = qemu_allocate_irqs(output_write_handler, s, 5); // 5 LEDs
+	/* Outputs IRQs */
+
+	// IRQs for all digital outputs of the main and extension board.
+	// Write callback is `output_write_handler`.
+	outputs_irq = qemu_allocate_irqs(output_write_handler, NULL, 5); // 5 LEDs
 
 	// Main red led
 	qdev_connect_gpio_out(gpio_c, 12, outputs_irq[0]);	// LED0 on GPIO C pin 12
@@ -140,13 +146,15 @@ static void stm32_p103_init(MachineState *machine) {
 	s->btn2_irq = qdev_get_gpio_in(gpio_c, 1); // Btn2
 	s->btn1_irq = qdev_get_gpio_in(gpio_c, 0); // Btn1
 
+	// Debug only. Connect the QEMU monitor here if necessary.
+	// qemu_add_kbd_event_handler(stm32_p103_key_event, s);
 
 	/* Connect RS232 to UART */
 	stm32_uart_connect((Stm32Uart *) uart2, serial_hds[0], STM32_USART2_NO_REMAP);
 
 	/* QEMU TCP gateway */
 
-	// stm32p103_emul_init(s); // TCP clients initialization
+	stm32p103_emul_init(s); // TCP clients initialization
 
 	// UART5 used to read/write debug informations from/to QEMU.
 	// UART5 cannot be used on the real target. This is a "fake" peripheral that can be used in QEMU only.
