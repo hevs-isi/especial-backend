@@ -3,6 +3,8 @@
  */
 #include "controller/intcontroller.h"
 
+static IntController* ctrl = IntCtrl::instance();
+
 IntController::IntController() {
 }
 
@@ -96,9 +98,8 @@ bool IntController::callIsr(uint32_t exti_Line) {
 	return false; // Wrong EXT line number
 }
 
-/* C ISR routines */
 
-static IntController* ctrl = IntCtrl::instance();
+/* C ISR routines. Check each EXT lines. */
 
 static void checkLineFlag(uint32_t exti_Line) {
 	if (EXTI_GetITStatus(exti_Line) != RESET) {

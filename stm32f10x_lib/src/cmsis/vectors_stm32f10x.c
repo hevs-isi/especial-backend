@@ -7,6 +7,8 @@
 
 #include "cortexm/ExceptionHandlers.h"
 
+// @SuppressWarnings("unused")
+
 // ----------------------------------------------------------------------------
 
 void __attribute__((weak))
@@ -65,12 +67,12 @@ void __attribute__ ((weak, alias ("Default_Handler")))
 CAN1_SCE_IRQHandler(void);
 void __attribute__ ((weak, alias ("Default_Handler")))
 EXTI9_5_IRQHandler(void);
-void __attribute__ ((weak, alias ("Default_Handler")))
-TIM1_BRK_TIM9_IRQHandler(void);
-void __attribute__ ((weak, alias ("Default_Handler")))
-TIM1_UP_TIM10_IRQHandler(void);
-void __attribute__ ((weak, alias ("Default_Handler")))
-TIM1_TRG_COM_TIM11_IRQHandler(void);
+//void __attribute__ ((weak, alias ("Default_Handler")))
+//TIM1_BRK_TIM9_IRQHandler(void);
+//void __attribute__ ((weak, alias ("Default_Handler")))
+//TIM1_UP_TIM10_IRQHandler(void);
+//void __attribute__ ((weak, alias ("Default_Handler")))
+//TIM1_TRG_COM_TIM11_IRQHandler(void);
 
 void __attribute__ ((weak, alias ("Default_Handler")))
 TIM1_BRK_IRQHandler(void);
@@ -112,7 +114,7 @@ RTCAlarm_IRQHandler(void);
 void __attribute__ ((weak, alias ("Default_Handler")))
 USBWakeUp_IRQHandler(void);
 
-void __attribute__ ((weak, alias ("Default_Handler")))
+/*void __attribute__ ((weak, alias ("Default_Handler")))
 TIM8_BRK_IRQHandler(void);
 void __attribute__ ((weak, alias ("Default_Handler")))
 TIM8_UP_IRQHandler(void);
@@ -196,7 +198,7 @@ TIM12_IRQHandler(void);
 void __attribute__ ((weak, alias ("Default_Handler")))
 TIM13_IRQHandler(void);
 void __attribute__ ((weak, alias ("Default_Handler")))
-TIM14_IRQHandler(void);
+TIM14_IRQHandler(void);*/
 
 // ----------------------------------------------------------------------------
 

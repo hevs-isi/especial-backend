@@ -10,6 +10,9 @@
  * Singleton template.
  *
  * The instance is created statically without new, even if not used.
+ *
+ * @see http://come-david.developpez.com/tutoriels/dps/?page=Singleton
+ * @author	Christopher Métrailler (mei@hevs.ch)
  */
 template<class T> class Singleton {
 public:

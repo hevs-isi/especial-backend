@@ -7,17 +7,18 @@
 extern "C" {
 #endif
 
-
-#define LED_PERIPH	RCC_APB2Periph_GPIOC
-#define LED_PORT	GPIOC
-#define LED_PIN		GPIO_Pin_12
-
-/* Initialize the LED (the board only has one). */
+/**
+ * Initialize the main red LED on the development board.
+ */
 void init_led(void);
 
+/**
+ * Toggle the state of the main red LED.
+ */
 void led_toggle(void);
 
-/* Configures the RS232 serial port using the following settings:
+/**
+ * Configure and enable the RS232 serial port (USART2) using the following settings :
  *   155200 Baud
  *   8 bits + 1 stop bit
  *   No parity bit
@@ -25,16 +26,21 @@ void led_toggle(void);
  */
 void init_usart2(void);
 
-void enable_rs232(void);
-
-// void enable_rs232_interrupts(void);
-
+/**
+ * Send one byte through the USART2 port.
+ * @see println
+ */
 void send_byte(uint8_t b);
 
+/**
+ * Send a String through the USART2 port.
+ */
 void println(const char* s);
 
+/**
+ * Wait some cycle (busy waiting).
+ */
 void busy_loop(uint32_t delay);
-
 
 #ifdef __cplusplus
 }

@@ -15,7 +15,7 @@ bool DigitalOutput::initialize() {
 	// Enable needed clocks
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO | gpio_port_rcc, ENABLE);
 
-	/* Configure the pin as push-pull output. */
+	// Configure the pin as push-pull output.
 	GPIO_InitTypeDef GPIO_InitStructure;
 	GPIO_InitStructure.GPIO_Pin = _pin.pin;
 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
@@ -29,7 +29,7 @@ bool DigitalOutput::initialize() {
 void DigitalOutput::setState(State state) {
 	_state = state;
 
-	if (_state == State(On))
+	if (_state == State(Off))
 		GPIO_ResetBits(gpio_port_base, _pin.pin); // clear
 	else
 		GPIO_SetBits(gpio_port_base, _pin.pin); // set

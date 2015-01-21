@@ -10,6 +10,15 @@
 #include <stdint.h>
 #include <map>
 
+/**
+ * External interrupt controller.
+ *
+ * All GPIO which need external interrupts must be registered here.
+ * This controller check all external interrupts lines and call the GPIO registered on this interrupt line.
+ * Only one GPIO can be registered on each lines.
+ *
+ * @author	Christopher Métrailler (mei@hevs.ch)
+ */
 class IntController {
 public:
 	IntController();
@@ -31,6 +40,9 @@ public:
 
 	/**
 	 * @brief Call the ISR function of the corresponding input.
+	 *
+	 * This must be a public method, because it is called from extern C functions.
+	 *
 	 * @param[in] exti_Line the external line number where the interrupt come from
 	 * @return `true` if success, `false` if not found (not registered)
 	 */
@@ -39,6 +51,7 @@ public:
 private:
 	// Store ISR callback for EXTI_Line0 to 15.
 	// 16 external lines available for each pins (shared with all ports).
+	// Only one GPIO can be registered to an EXT line.
 	Interrupt* _isrVector[16];
 };
 

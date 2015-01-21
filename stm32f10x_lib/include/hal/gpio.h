@@ -14,7 +14,10 @@
 
 /**
  * Define a GPIO with a port and a pin number.
- * Base class used for many I/O.
+ *
+ * Base class used for all I/O to access to a port and a pin.
+ *
+ * @author	Christopher Métrailler (mei@hevs.ch)
  */
 class Gpio {
 
@@ -52,7 +55,7 @@ protected:
 	GPIO_TypeDef* gpio_port_base = ports_base.at(_pin.port);
 
 public:
-	//FIXME: optimize with an array ?
+	//FIXME: Can be optimized with an array instead of the map
 	static const std::map<uint8_t, uint32_t> ports_rcc;
 	static const std::map<uint8_t, GPIO_TypeDef*> ports_base;
 };

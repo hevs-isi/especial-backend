@@ -10,6 +10,8 @@
  * Configure a pin as analog input.
  *
  * Use the `ADC1` for the analog to digital conversion (12 bit conversion).
+ *
+ * @author	Christopher Métrailler (mei@hevs.ch)
  */
 class AnalogInput: public Gpio {
 public:

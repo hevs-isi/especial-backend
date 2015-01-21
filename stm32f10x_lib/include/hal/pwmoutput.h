@@ -13,6 +13,9 @@
  * Available only for PB8 (TIM4_CH3) and PB9 (TIM4_CH4), respectively led3 and led4.
  * Configure only the timer4 for now. Cannot be used with any PWM output.
  * Configure the PWM output as push-pull pin with a frequency of 8.77kHz (maximum).
+ * Duty cycle value is from 0 to 0xFFF (100%).
+ *
+ * @author	Christopher Métrailler (mei@hevs.ch)
  */
 class PwmOutput: public Gpio {
 public:

@@ -12,6 +12,8 @@
  * Configure the pin as a digital output.
  *
  * Works with all pin and ports.
+ *
+ * @author	Christopher Métrailler (mei@hevs.ch)
  */
 class DigitalOutput: public Gpio {
 public:
@@ -28,11 +30,15 @@ public:
 	State state() const;
 	void setState(State state);
 
+	/**
+	 * @brief Set the output pin value to on or off.
+	 * @param state `true` to set on, otherwise `false`
+	 */
 	inline void set(bool state) {
 		if (state)
-			setState(Off);
-		else
 			setState(On);
+		else
+			setState(Off);
 	}
 
 	inline const DigitalOutput & operator=(State state) {
@@ -40,6 +46,10 @@ public:
 		return *this;
 	}
 
+	/**
+	 * @brief Equals operator overloading to set the output pin value.
+	 * @see set
+	 */
 	inline const DigitalOutput & operator=(bool value) {
 		set(value);
 		return *this;
@@ -49,6 +59,9 @@ public:
 		return state();
 	}
 
+	/**
+	 * @brief Invert the output pin value.
+	 */
 	void toggle() {
 		setState(static_cast<State>(-state()));
 	}

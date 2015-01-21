@@ -14,6 +14,8 @@
  * Works with all pin and ports. Use interruptions to read the pin value when it change.
  * Use `get` to poll the input or `get` to read the current cached value.
  * If interrupts are used, the cached value is updated automatically.
+ *
+ * @author	Christopher Métrailler (mei@hevs.ch)
  */
 class DigitalInput: public Gpio, public Interrupt {
 public:

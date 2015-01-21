@@ -4,7 +4,9 @@
 #pragma once
 
 /**
- * Interface used by GPIO that use interrupt (ISR).
+ * Interface used by GPIO that needs interrupt (ISR).
+ *
+ * @author	Christopher Métrailler (mei@hevs.ch)
  */
 class Interrupt {
 public:

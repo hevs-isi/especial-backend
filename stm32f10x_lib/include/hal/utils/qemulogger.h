@@ -14,8 +14,20 @@ typedef enum EventId_t {
 	SECTION_END = 'F' /*!< Last program line. Terminated. */
 } EventId;
 
+/**
+ * Send events from the microcontroller code (using UART5) when running in QEMU.
+ *
+ * The UART5 peripheral has been modified and these events are trapped by the QEMU code.
+ * This allow to monitor the code execution in QEMU. The code execution is blocked until
+ * the event has been acked by the Scala side (if needed).
+ *
+ * @note This code works only in QEMU. UART5 peripheral must be modified.
+ *
+ * @author	Christopher Métrailler (mei@hevs.ch)
+ */
 class QemuLogger {
 private:
+	/** Event ID. */
 	static const uint16_t MONITOR_ACK_READ = 0x1FF;
 public:
 
@@ -33,11 +45,13 @@ public:
 
 		if (ack) {
 			// Wait until previous character got transfered
-			while (USART_GetFlagStatus(UART5, USART_FLAG_TXE) == RESET);
+			while (USART_GetFlagStatus(UART5, USART_FLAG_TXE) == RESET)
+				;
 
 			// Wait until the value has been validated by the monitor.
 			// UART5 DR read register is blocking
-			while (USART_ReceiveData(UART5) != MONITOR_ACK_READ);
+			while (USART_ReceiveData(UART5) != MONITOR_ACK_READ)
+				;
 		}
 	}
 };
