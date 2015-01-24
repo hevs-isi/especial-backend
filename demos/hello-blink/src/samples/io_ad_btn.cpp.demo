@@ -2,42 +2,62 @@
 #include "digitalinput.h"
 #include "analoginput.h"
 #include "pwmoutput.h"
-#include "utils/delay.h"
+#include "utils/time.h"
+#include "helper.h"
 
-PwmOutput pwm4('B', 9);		// led4
-PwmOutput pwm3('B', 8);		// led3
-DigitalOutput led2('C', 4);	// led2
-DigitalOutput led1('C', 3);	// led1
+AnalogInput adc1('B', 0, 8); // Potentiometer
+DigitalInput btn2('C', 1);	 // btn2
 
-AnalogInput adc1('B', 0, 8);
-DigitalInput btn1('C', 0);	// btn1
+PwmOutput pwm3('B', 8);		 // led3
+DigitalOutput led4('B', 9);	 // led4
+DigitalOutput led2('C', 4);	 // led2
+DigitalOutput led1('C', 3);	 // led1
+
+void initIO() {
+	btn2.initialize();		 // Inputs
+	adc1.initialize();
+
+	pwm3.initialize();		 // Outputs
+	led4.initialize();
+	led2.initialize();
+	led1.initialize();
+}
 
 /**
  * Test application for the I/O extension board.
+ *
  * 	- led1 is ON when running
  * 	- led2 is controlled by btn2
- * 	- led3 and led4 are controlled by the potentiometer
+ * 	- led3 is controlled by the potentiometer (PWM)
+ * 	- led4 toggles each 0.5 seconds (use Timer2)
  */
 int main() {
+	timeout_t time;
+	time_init();
 
-	btn1.initialize();
-	adc1.initialize();
+	initIO();	// Init all I/O and set to '0'
+	
+	println("Sample application started.");
 
-	pwm3.initialize();
-	pwm4.initialize();
-	led2.initialize();
-	led1.initialize();
-
+	// Led1 is on. Same as 'led1.set(true);' or 'led1.setState(On);'
 	led1 = true;
 
 	while (1) {
-		bool val = btn1.get();
-		led2.set(val);
+		// Led2 is controlled by btn2
+		// bool val = btn1.get();
+		// led2.set(val);
+		led2 = btn2.get(); // Use EXT interrupt line
 
-		uint16_t period = adc1.read();
-		pwm3.setPeriod(period);
-		pwm4.setPeriod(4096 - period);
+		// Potentiometer value on led3 (PWM signal)
+		// uint16_t period = adc1.read();
+		// pwm3.setPeriod(period);
+		pwm3 = adc1.read();	// Start A/D conversion
+
+		// Led4 toggles each 0.5 seconds
+		if(time_diff_ms(time_get(), time) > 500) {
+			time = time_get();
+			led4.toggle();
+		}
 	}
-
 	return 0;
 }
