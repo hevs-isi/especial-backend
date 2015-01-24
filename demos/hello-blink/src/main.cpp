@@ -1,7 +1,7 @@
 #include "digitalinput.h"
 #include "digitaloutput.h"
 
-DigitalInput btn2('C', 1);
+DigitalInput btn2('C', 06);
 DigitalOutput led('C', 12);
 
 void init() {
@@ -11,7 +11,7 @@ void init() {
 }
 
 /**
- * Read the button value and update the LED.
+ * Read the main button value and update the main red LED (no extension board).
  * The button value is updated using an external interrupt line.
  */
 int main() {
@@ -19,6 +19,6 @@ int main() {
 
 	while (1) {
 		bool r = btn2.get();
-		led.set(r);
+		led.set(!r); // Led0 is active low
 	}
 }
