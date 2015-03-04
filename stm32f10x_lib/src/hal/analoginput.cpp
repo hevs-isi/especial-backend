@@ -47,7 +47,7 @@ bool AnalogInput::initialize() {
 uint16_t AnalogInput::read() {
 
 	// FIXME: before changing the channel, the A/D must be initialized again.
-	adInit();
+	// adInit();
 
 	// Configure channel
 	ADC_RegularChannelConfig(ADC1, _channel, 1, ADC_SampleTime_55Cycles5);

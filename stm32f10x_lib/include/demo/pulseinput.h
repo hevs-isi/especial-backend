@@ -39,7 +39,6 @@ public:
 		return lastPulseTime;
 	}
 
-private:
 	// Start time of the counter.
 	timeout_t startTime;
 
@@ -51,4 +50,6 @@ private:
 
 	// Time measure of the last valid pulse.
 	uint32_t lastPulseTime;
+
+	timeout_t lastPulseTimestamp;
 };

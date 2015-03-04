@@ -33,6 +33,8 @@ typedef struct {
 	double max;
 } pid_t;
 
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
 void pid_init(pid_t *pid, double kp, double ki, double kd, double min, double max);
 double pid_step(pid_t *pid, double measured_value);
 

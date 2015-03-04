@@ -16,6 +16,9 @@ bool PulseInput::initialize() {
 	bool res = DigitalInput::initialize();
 	time_init();
 	time_resume();
+
+	lastPulseTimestamp = time_get();
+
 	return res;
 }
 
@@ -25,9 +28,10 @@ void PulseInput::irq() {
 	}
 
 	// Measure the elapsed time after 4 pulses (8 edges)
-	else if (pulseCounter == 8) {
+	else if (pulseCounter == 4) {
 		timeout_t now = time_get();
 		lastPulseTime = time_diff_ms(now, startTime);
+		lastPulseTimestamp = now;
 
 		// Reset the counter and count the next 8 edges
 		startTime = time_get();
