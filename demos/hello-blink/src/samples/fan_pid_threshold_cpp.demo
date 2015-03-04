@@ -2,7 +2,7 @@
  ********************************************************************************
  Code for 'FanPid'.
  ------------------
- Generated automatically on Thu Jan 29 21:09:21 CET 2015.
+ Generated automatically on Wed Mar 04 12:37:39 CET 2015.
  ESPecIaL version B3.0
  ********************************************************************************
  */
@@ -12,17 +12,19 @@
 #include "pulseinput.h"
 #include "digitalinput.h"
 #include "demo/pid.h"
-#include "pwmoutput.h"
-
 #include "utils/delay.h"
+#include "pwmoutput.h"
+#include "digitaloutput.h"
 //*// ----------
 
 //*// Section 01
 AnalogInput in_cmp08('B', 0, 8);	// OutputPort[0] 'out' of Cmp[08] 'AnalogInput'
 PulseInput in_cmp07('B', 9);		// OutputPort[0] 'out' of Cmp[07] 'PulseInputCounter'
 DigitalInput in_cmp14('C', 0);		// OutputPort[0] 'out' of Cmp[14] 'DigitalInput'
+double rc = 0.0;
 pid_t pid_cmp01;					// OutputPort[0] 'out' of Cmp[01] 'PID'
 PwmOutput out_cmp12('B', 8);		// InputPort[0] 'in' of Cmp[12] 'PwmOutput'
+DigitalOutput out_cmp16('C', 3);	// InputPort[0] 'in' of Cmp[16] 'DigitalOutput'
 //*// ----------
 
 //*// Section 02
@@ -34,6 +36,7 @@ uint16_t getlAnalogInputB0() {
 //*// Section 03
 void initOutputs() {
     out_cmp12.initialize();
+    out_cmp16.initialize();
 }
 
 void init() {
@@ -44,18 +47,14 @@ void init() {
 }
 //*// ----------
 
-
 int main() {
     initOutputs();
     init();
-
-    delay_wait_ms(10);
 
     //*// Section 04
     //*// ----------
 
     //*// Section 05
-    double rc = 0;
     while(1) {
         // 1) Read inputs
         uint16_t in_B0 = getlAnalogInputB0();
@@ -67,11 +66,12 @@ int main() {
         // -- User input code of `SpeedGain`
         uint32_t timeDiff = time_diff_ms(time_get(), in_cmp07.lastPulseTimestamp);
         int32_t out_cmp09 = MAX(in_B9 , timeDiff);
-        rc = rc * 0.5 + out_cmp09 * 0.5;		// RC filter
-        out_cmp09 = 4000.0 * 90.0 / 2.0 / rc; 	// Speed gain
+        rc = rc * 0.5 + out_cmp09 * 0.5; // RC filter
+        out_cmp09 = 180000.0 / rc;       // Speed gain
 
         delay_wait_ms(10);
         // --
+
 
         // -- User input code of `Not`
         uint8_t out_cmp11 = (in_C0 == 0) ? 1 : 0;
@@ -87,8 +87,16 @@ int main() {
         else
             out_cmp10 = out_cmp01;
 
+        // -- User input code of `Threshold`
+        bool threshold_cmp15 = false;
+        if(out_cmp10 > 2048)
+            threshold_cmp15 = true;
+        // --
+
+
         // 3) Update outputs
         out_cmp12.setPeriod(out_cmp10);
+        out_cmp16.set(threshold_cmp15);
     }
     //*// ----------
 
