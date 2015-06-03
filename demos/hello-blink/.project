@@ -27,7 +27,7 @@
 		<link>
 			<name>stm32f10x_lib</name>
 			<type>2</type>
-			<locationURI>WORKSPACE_LOC/stm32f10x_lib</locationURI>
+			<locationURI>PARENT-2-PROJECT_LOC/stm32f10x_lib</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
