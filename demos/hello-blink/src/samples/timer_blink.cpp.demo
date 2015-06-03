@@ -1,0 +1,50 @@
+#include "digitaloutput.h"
+#include "utils/time.h"
+
+DigitalOutput led('C', 12);
+
+timeout_t timer1;
+bool outValue = true;
+
+void init() {
+	time_init();
+	led.initialize();
+}
+
+/**
+ * Create several timeouts to blink the main LED (active low).
+ *
+ * 1. First, set the LED on and wait for 5s
+ * 2. Switch off the LED and wait for 2s
+ * 3. Switch on the LED and wait for 0.5s
+ * 4. Goto 2
+ *
+ * Timing diagram:
+ *
+ *   +++--------------+   +-+   +-+
+ *   ++|      1       | 2 |3| 2 |3|
+ *   +++              +---+ +---+ +-
+ */
+int main() {
+	init();
+
+	led.set(false); // Set the LED on during 5s (active low)
+
+	timer1 = time_set_timeout_ms(5000); // Wait first for 5s
+
+	while (1) {
+
+		// Timer1 timeout
+		if (time_diff_ms(timer1, time_get()) <= 0) {
+
+			led.set(outValue);	// Toggle the LED value
+			outValue = !outValue;
+
+			// Set a new timeout value
+			if (outValue)
+				timer1 = time_set_timeout_ms(500);
+			else
+				timer1 = time_set_timeout_ms(2000);
+		}
+	}
+}
