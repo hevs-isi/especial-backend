@@ -2,9 +2,15 @@
  * \file	heivs/delay.h
  * \brief	simple active delays
  * \author	marc dot pignat at hevs dot ch
+ * \author  christopher dot metrailler at hevs dot ch
  *
- * Code updated for the STM32F103-STK board.
  * Delays with busy loops (active waiting, no timer).
+ *
+ * Code adapted from the "libheivs_stm32" library.
+ * See <a href="http://armebs4.hevs.ch">Armebs4</a>.
+ *
+ * ChangeLog:
+ * - code updated for the STM32F103-STK board.
  ***************************************************************************/
 #pragma once
 

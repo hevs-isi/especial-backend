@@ -1,3 +1,11 @@
+/**
+ * \file	heivs/delay.c
+ * \author	marc dot pignat at hevs dot ch
+ * \author  christopher dot metrailler at hevs dot ch
+ *
+ * Original file modified, see "delay.h".
+ */
+ 
 #include "utils/delay.h"
 
 #include "stm32f10x.h"

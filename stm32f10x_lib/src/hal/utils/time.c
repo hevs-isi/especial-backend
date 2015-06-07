@@ -1,8 +1,9 @@
 /**
  * \file	heivs/time.c
  * \author	marc dot pignat at hevs dot ch
+ * \author  christopher dot metrailler at hevs dot ch
  *
- * Uses timer 2 (STM32F10X_MD).
+ * Original file modified, see "time.h".
  */
 
 #include "utils/time.h"
@@ -70,6 +71,6 @@ void time_init(void) {
 	delay_wait_ms(500);
 }
 
-uint32_t time_diff_ms(timeout_t now, timeout_t before) {
+int32_t time_diff_ms(timeout_t now, timeout_t before) {
 	return now.value - before.value;
 }
